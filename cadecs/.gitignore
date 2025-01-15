@@ -1,0 +1,44 @@
+# Byte-compiled / cached
+__pycache__/
+*.py[cod]
+*.swp
+*.swo
+
+# Virtual environment
+venv/
+env/
+
+# Django migrations
+**/migrations/*.pyc
+**/migrations/*.py, !*/migrations/__init__.py
+
+# Database files
+db.sqlite3
+db.sqlite3-journal
+
+# Media and static files
+media/
+staticfiles/
+
+# VS Code settings
+.vscode/
+
+# IDE and Editor files
+.idea/
+*.sublime-workspace
+
+# Logs and debug files
+*.log
+logs/
+*.out
+
+# Django secret key files (if applicable)
+.env
+.env.example
+
+# Node.js dependencies (if using frontend inside Django)
+node_modules/
+
+# Compiled assets
+*.css.map
+*.js.map

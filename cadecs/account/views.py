@@ -11,6 +11,7 @@ from .serializers import OrganizationSerializer
 from .models import Organization
 from utils.pagination import GenericPagination
 from utils.custom_exception import ResponseError
+from assets.dropdown import organization_type
 
 
 
@@ -31,8 +32,14 @@ class RegionView(APIView):
         paginated_data = paginator.paginate_queryset(filtered_data, request) 
         
         return paginator.get_paginated_response(paginated_data) 
-
-
+    
+class OrganizationTypeView(APIView):
+    def get(self,request):  
+        resp = {
+                "results": organization_type,                
+                "resultCode": "1"
+            }
+        return Response(resp, status=status.HTTP_200_OK)  
 
 
 class OrganizationView(APIView):

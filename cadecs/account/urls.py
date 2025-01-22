@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import (
 # from .views import DashboardView
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import OrganizationListView,OrganizationView,RegionView
+from .views import OrganizationListView,OrganizationView,RegionView,OrganizationTypeView
 
 
 
@@ -16,6 +16,7 @@ urlpatterns = [
     path('organization-listing/', OrganizationListView.as_view()),
     path('organization/', OrganizationView.as_view()),
     path('region/', RegionView.as_view()),
+    path('organization-type/', OrganizationTypeView.as_view()),
 ]
 
 if settings.DEBUG:

@@ -74,27 +74,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'cadecs.wsgi.application'
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',  # MySQL backend
-        'NAME': 'cadecsdb',          # Database name
-        'USER': 'cadecs',          # Database user
-        'PASSWORD': 'cadecs123#',  # Database password
-        'HOST': 'cadecsdevdb.cpggig6m6sbf.ap-south-1.rds.amazonaws.com',                   # Database host, e.g., '127.0.0.1'
-        'PORT': '3306',                        # Default MySQL port
-        # 'OPTIONS': {
-        #     'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",  # Optional
-        # },
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

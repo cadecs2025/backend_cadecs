@@ -9,50 +9,50 @@ class OrganizationSerializer(serializers.ModelSerializer):
         read_only_fields = ['organization_id','created_at','created_by']
     
 
-    def validate(self, data):       
+    # def validate(self, data):       
         
-        organization_name = data.get('organization_name') 
-        if not organization_name:
-            raise ValidationError("organization_name not found. Please input valid organization_name.")
+    #     organization_name = data.get('organization_name') 
+    #     if not organization_name:
+    #         raise ValidationError("organization_name not found. Please input valid organization_name.")
 
-        organization_type = data.get('organization_type')
-        if not organization_type:
-            raise ValidationError("organization_type not found. Please input valid organization_type")
+    #     organization_type = data.get('organization_type')
+    #     if not organization_type:
+    #         raise ValidationError("organization_type not found. Please input valid organization_type")
         
-        organization_logo = data.get('organization_logo')
-        if not organization_logo:
-            raise ValidationError("organization_logo not found. Please input valid organization_logo")
+    #     organization_logo = data.get('organization_logo')
+    #     if not organization_logo:
+    #         raise ValidationError("organization_logo not found. Please input valid organization_logo")
         
-        ceo_name = data.get('ceo_name')
-        if not ceo_name:
-            raise ValidationError("ceo_name not found. Please input valid ceo_name.")
+    #     ceo_name = data.get('ceo_name')
+    #     if not ceo_name:
+    #         raise ValidationError("ceo_name not found. Please input valid ceo_name.")
         
-        registered_year = data.get('registered_year')  
-        if not registered_year:
-            raise ValidationError("registered_year not found. Please input valid registered_year")
+    #     registered_year = data.get('registered_year')  
+    #     if not registered_year:
+    #         raise ValidationError("registered_year not found. Please input valid registered_year")
         
-        tax_number = data.get('tax_number') 
-        if not tax_number:
-            raise ValidationError("tax_number not found. Please input valid tax_number")
+    #     tax_number = data.get('tax_number') 
+    #     if not tax_number:
+    #         raise ValidationError("tax_number not found. Please input valid tax_number")
         
-        contact_person = data.get('contact_person') 
-        if not contact_person:
-            raise ValidationError("contact_person not found. Please input valid contact_person")
+    #     contact_person = data.get('contact_person') 
+    #     if not contact_person:
+    #         raise ValidationError("contact_person not found. Please input valid contact_person")
         
-        email = data.get('email')
-        if not email:
-            raise ValidationError("email not found. Please input valid email")       
+    #     email = data.get('email')
+    #     if not email:
+    #         raise ValidationError("email not found. Please input valid email")       
         
-        website_url = data.get('website_url')
-        phone_number = data.get('phone_number')
-        alt_contact_number = data.get('alt_contact_number')
-        address = data.get('address')
-        city = data.get('city')
-        state = data.get('state')
-        county = data.get('county')
-        zip_code = data.get('zip_code')
-        cin = data.get('cin')       
-        return data
+    #     website_url = data.get('website_url')
+    #     phone_number = data.get('phone_number')
+    #     alt_contact_number = data.get('alt_contact_number')
+    #     address = data.get('address')
+    #     city = data.get('city')
+    #     state = data.get('state')
+    #     county = data.get('county')
+    #     zip_code = data.get('zip_code')
+    #     cin = data.get('cin')       
+    #     return data
     
 
     def create(self, validated_data):
@@ -97,8 +97,37 @@ class OrganizationSerializer(serializers.ModelSerializer):
                                             zip_code = zip_code,
                                             cin = cin,
                                             created_by = created_by          
-                                            )            
-
+                                            )          
+        
+        
+        
         return org_obj
+    
+
+    def update(self, instance, validated_data):            
+        
+        instance.organization_name = validated_data.get('organization_name',instance.organization_name)
+        instance.organization_type = validated_data.get('organization_type',instance.organization_type)        
+        instance.organization_logo = validated_data.get('organization_logo',instance.organization_logo)
+        instance.ceo_name = validated_data.get('ceo_name',instance.ceo_name)
+        instance.registered_year = validated_data.get('registered_year',instance.registered_year)
+        instance.tax_number = validated_data.get('tax_number',instance.tax_number)
+        instance.contact_person = validated_data.get('contact_person',instance.contact_person)
+        instance.email = validated_data.get('email',instance.email)
+        instance.website_url = validated_data.get('website_url',instance.website_url)   
+        instance.phone_number = validated_data.get('phone_number',instance.phone_number)
+        instance.alt_contact_number = validated_data.get('alt_contact_number',instance.alt_contact_number)  
+        instance.address = validated_data.get('address',instance.address) 
+        instance.city = validated_data.get('city',instance.city) 
+        instance.state = validated_data.get('state',instance.state) 
+        instance.county = validated_data.get('county',instance.county) 
+        instance.zip_code = validated_data.get('zip_code',instance.zip_code) 
+        instance.cin = validated_data.get('cin',instance.cin)
+        instance.created_by = validated_data.get('created_by',instance.created_by) 
+
+        print(f"""{instance.organization_name}-{instance.organization_type}-{instance.website_url}-{instance.email}-{instance.phone_number}""")     
+        
+        instance.save()
+        return instance
 
    

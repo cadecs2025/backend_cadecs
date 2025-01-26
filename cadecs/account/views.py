@@ -45,6 +45,20 @@ class OrganizationTypeView(APIView):
 class OrganizationView(APIView):
     parser_classes = (MultiPartParser, FormParser)
     permission_classes = [IsAuthenticated] 
+
+    def get(self,request,pk=None): 
+        try:
+            org_data = Organization.objects.get(pk=pk)
+        except:
+            raise ResponseError("Invalid primary key. Please input valid primary key.")
+        else:   
+            org_serializers = OrganizationSerializer(org_data)
+            resp = {
+                'results': org_serializers.data,            
+                'resultCode': '1',
+                'resultDescription': f'Get organization details by id.'
+            }
+            return Response(resp, status=status.HTTP_200_OK)
     
     def post(self, request):           
         user = self.request.user          
@@ -65,6 +79,37 @@ class OrganizationView(APIView):
             ser_val = ', '.join(orgs_ser.errors.get(ser_key))
             raise ResponseError(f"{ser_val}",
                                     f"Attempted to create organization {org_name} but raised error {ser_key} {ser_val}") 
+        
+    def patch(self,request,pk=None):        
+        try:
+            org_data = Organization.objects.get(pk=pk)
+        except:
+            raise ResponseError("Organization id not found",f"Attempt to organization but id not found.")
+        else:    
+
+            print(f"org_data: {org_data}",flush=True)
+            print(f"request.data: {request.data}",flush=True)
+
+            orgs_ser = OrganizationSerializer(org_data,data=request.data,partial=True)
+
+            if orgs_ser.is_valid(): 
+                print(f"serializers is valid: ",flush=True)
+                orgs_ser.save()                
+            else:            
+                ser_key = list(orgs_ser.errors.keys())[0]
+                ser_val = ', '.join(orgs_ser.errors.get(ser_key))          
+                raise ResponseError(f"{ser_val}",
+                                    f"Attempted to update organizations {org_data.organization_name} but raised error {ser_key} {ser_val}") 
+
+
+            resp = {
+                'results': f"Organization {org_data.organization_name} updated successfully",
+                'resultCode': '1',
+                'resultDescription': f"Organization {org_data.organization_name} updated successfully",
+                
+            }
+            return Response(resp, status=status.HTTP_200_OK)     
+    
 
         
 

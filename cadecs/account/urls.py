@@ -15,8 +15,10 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('organization-listing/', OrganizationListView.as_view()),
     path('organization/', OrganizationView.as_view()),
+    path('organization/<int:pk>', OrganizationView.as_view()),
     path('region/', RegionView.as_view()),
-    path('organization-type/', OrganizationTypeView.as_view()),
+    path('organization-type/', OrganizationTypeView.as_view())
+    
 ]
 
 if settings.DEBUG:

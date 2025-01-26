@@ -14,7 +14,7 @@ class Organization(BaseModel):
     organization_id = models.IntegerField(unique=True, editable=False)
     organization_name = models.CharField(max_length=250)
     organization_type = models.CharField(max_length=100)
-    organization_logo = models.FileField(upload_to='media/')
+    organization_logo = models.FileField(upload_to='images/')
     ceo_name = models.CharField(max_length=100,null=True)
     registered_year = models.CharField(max_length=50)
     tax_number = models.CharField(max_length=100,null=True)

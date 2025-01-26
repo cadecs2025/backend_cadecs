@@ -6,7 +6,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = '__all__'
-        read_only_fields = ['organization_id','created_at','created_by']
+        read_only_fields = ['organization_id','created_at','created_by','organization_logo']
     
 
     # def validate(self, data):       
@@ -58,7 +58,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         organization_name = validated_data.get('organization_name')  
         organization_type = validated_data.get('organization_type')
-        organization_logo = validated_data.get('organization_logo')
+        # organization_logo = validated_data.get('organization_logo')
         ceo_name = validated_data.get('ceo_name')
         registered_year = validated_data.get('registered_year')
         tax_number = validated_data.get('tax_number')  
@@ -76,12 +76,12 @@ class OrganizationSerializer(serializers.ModelSerializer):
         created_by = self.context.get("created_by")
 
 
-        print(f"""{organization_name}-{organization_type}-{organization_logo}-{ceo_name}-{registered_year}-{tax_number}-{contact_person}-{email}-{website_url}-{phone_number}-{alt_contact_number}-{address}-{city}-{state}-{county}-{zip_code}-{cin}-{created_by}""")
+        print(f"""{organization_name}-{organization_type}-{ceo_name}-{registered_year}-{tax_number}-{contact_person}-{email}-{website_url}-{phone_number}-{alt_contact_number}-{address}-{city}-{state}-{county}-{zip_code}-{cin}-{created_by}""")
         
         org_obj = Organization.objects.create(
                                             organization_name=organization_name, 
                                             organization_type=organization_type,
-                                            organization_logo=organization_logo, 
+                                            # organization_logo=organization_logo, 
                                             ceo_name=ceo_name, 
                                             registered_year=registered_year,
                                             tax_number=tax_number,

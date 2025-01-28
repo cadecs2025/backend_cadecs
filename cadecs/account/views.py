@@ -8,7 +8,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.parsers import MultiPartParser, FormParser
-from .serializers import OrganizationSerializer,UserProfileSerializers
+from .serializers import *
 from .models import Organization, UserProfile, create_user_details
 from utils.pagination import GenericPagination
 from utils.custom_exception import ResponseError
@@ -42,6 +42,19 @@ class OrganizationTypeView(APIView):
                 "resultCode": "1"
             }
         return Response(resp, status=status.HTTP_200_OK)  
+
+class OrganizationDropDownView(APIView):
+    permission_classes = [IsAuthenticated] 
+
+    def get(self,request):        
+            org_data = Organization.objects.all()        
+            org_serializers = OrganizationDropDownSerializer(org_data,many=True)
+            resp = {
+                'results': org_serializers.data,            
+                'resultCode': '1',
+                'resultDescription': f'Get organization drop down details.'
+            }
+            return Response(resp, status=status.HTTP_200_OK)
 
 
 class OrganizationView(APIView):
@@ -128,11 +141,10 @@ class OrganizationListView(ListAPIView):
 class UserProfileView(APIView):
     permission_classes = ([IsAuthenticated])
     
-    def post(self, request):  
-        print(request.data,flush=True)
+    def post(self, request):
         resume =  request.data.get('resume',None)
         image = request.data.get('image',None)
-        created_by = self.request.user 
+        created_by = self.request.user.email
         email = request.data.get('email',None)
         password = request.data.get('password',None)
         username = request.data.get('username',None)
@@ -216,6 +228,63 @@ class UserProfileView(APIView):
             raise ResponseError(f"{ser_val}",
                                     f"Attempted to create User {org_name} but raised error {ser_key} {ser_val}")      
 
+
+    def patch(self,request,pk=None):        
+        try:
+            user_data = UserProfile.objects.get(pk=pk)
+        except:
+            raise ResponseError("User id not found",f"Attempt to get user but id not found.")
+        else:    
+
+            print(f"user_data: {user_data}",flush=True)
+            print(f"request.data: {request.data}",flush=True)
+
+            resume =  request.data.get('resume',None)
+            image = request.data.get('image',None)
+            created_by = self.request.user.email
+            email = request.data.get('email',None)
+            password = request.data.get('password',None)
+            username = request.data.get('username',None)
+            first_name = request.data.get('first_name',None)
+            last_name = request.data.get('last_name',None)
+            is_active = request.data.get('is_active',False)
+            phone_number = request.data.get('phone_number',None)
+            alt_contact_number = request.data.get('alt_contact_number',None)
+            address = request.data.get('address',None)
+            city = request.data.get('city',None)
+            state = request.data.get('state',None)
+            country = request.data.get('country',None)
+            zip_code = request.data.get('zip_code',None)
+            gender = request.data.get('gender',None)
+            nationality = request.data.get('nationality',None)
+            organization = request.data.get('organization',None)
+
+            data= {'email':email,'password':password,'username':username,'first_name':first_name,
+               'last_name':last_name,'is_active':is_active,'phone_number':phone_number,
+               'alt_contact_number':alt_contact_number,'address':address,'city':city,'state':state,
+               'country':country,'zip_code':zip_code,'gender':gender,'nationality':nationality}
+        
+            context= {'resume':resume,'created_by':created_by,'organization':organization,'image':image}
+
+            user_ser = UserProfileSerializers(user_data,data=data,context = context,partial=True)
+
+            if user_ser.is_valid(): 
+                print(f"serializers is valid: ",flush=True)
+                user_ser.save()                
+            else:            
+                ser_key = list(user_ser.errors.keys())[0]
+                ser_val = ', '.join(user_ser.errors.get(ser_key))          
+                raise ResponseError(f"{ser_val}",
+                                    f"Attempted to update organizations {user_ser.user_id} but raised error {ser_key} {ser_val}") 
+
+
+            resp = {
+                'results': f"User {username} updated successfully",
+                'resultCode': '1',
+                'resultDescription': f"Organization {username} updated successfully",
+                
+            }
+            return Response(resp, status=status.HTTP_200_OK) 
 
 
 class UserProfileListView(ListAPIView):

@@ -2,6 +2,13 @@ from rest_framework import serializers
 from .models import Organization, UserProfile,ProfileImage,UserDetails
 from utils.custom_exception import ValidationError
 
+
+class OrganizationDropDownSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = ['id','organization_name']
+        # read_only_fields = ['organization_id','created_at','created_by']
+
 class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
@@ -151,6 +158,7 @@ class UserProfileSerializers(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = [
+            'id',
             'user_id',
             'email',
             'password',
@@ -179,7 +187,7 @@ class UserProfileSerializers(serializers.ModelSerializer):
             print(f"image_details: {image_details}",flush=True)
             image  = image_details.get('image')
             if image:
-                return image_details.image
+                return image
         return 'media/profileImage/default.png'
     
     def get_user_detail(self,obj):        
@@ -214,6 +222,54 @@ class UserProfileSerializers(serializers.ModelSerializer):
 
         return user 
         
+    def update(self, instance, validated_data):            
+        
+        instance.email = validated_data.get('email',instance.email)
+        instance.is_active = validated_data.get('is_active',instance.is_active)        
+        instance.phone_number = validated_data.get('phone_number',instance.phone_number)
+        instance.alt_contact_number = validated_data.get('alt_contact_number',instance.alt_contact_number)
+        instance.address = validated_data.get('address',instance.address)
+        instance.city = validated_data.get('city',instance.city)
+        instance.state = validated_data.get('state',instance.state)
+        instance.country = validated_data.get('country',instance.country)
+        instance.zip_code = validated_data.get('zip_code',instance.zip_code)   
+        instance.gender = validated_data.get('gender',instance.gender)
+        instance.nationality = validated_data.get('nationality',instance.nationality) 
+
+        organization_id = self.context.get("organization")
+        resume = self.context.get("resume",None)
+        created_by = self.context.get("created_by",None)
+        image = self.context.get("image",None)
+
+        print(f"created_by: {created_by}",flush=True)
+
+        ProfileImage.objects.filter(user=instance).update(image=image)
+
+        try:
+            organization_id = int(organization_id)
+            org_obj = Organization.objects.get(id=organization_id)
+            print(f"Organizations objects: {org_obj}",flush=True)
+        except Exception as ex:
+            print(f"ex: {ex}",flush=True)
+        else:           
+            user_details=UserDetails.objects.filter(user = instance.id)
+            print(f"user_details: {user_details}",flush=True)           
+
+            if user_details:
+                user_details.update(            
+                                    organization=org_obj,
+                                    resume=resume,
+                                    updated_by = created_by,
+                                    )
+            else:
+                UserDetails.objects.create(user = instance,
+                                    organization=org_obj,
+                                    resume=resume,
+                                    created_by = created_by,
+                                    )                           
+        
+        instance.save()
+        return instance
 
         
         

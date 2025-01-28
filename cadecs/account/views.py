@@ -225,3 +225,10 @@ class UserProfileListView(ListAPIView):
     pagination_class = GenericPagination
     # ordering_fields = ["organization_id","organization_name", "organization_type","registered_year","city","state","county","zip_code","cin"]
     # search_fields = ["organization_id","organization_name", "organization_type","registered_year","city","state","county","zip_code","cin"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        print(f"user: {user}",flush=True)        
+        queryset = queryset.exclude(email=user)  
+        return queryset

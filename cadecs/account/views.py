@@ -1,4 +1,5 @@
 import json
+import re
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
@@ -7,11 +8,12 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.parsers import MultiPartParser, FormParser
-from .serializers import OrganizationSerializer
-from .models import Organization
+from .serializers import OrganizationSerializer,UserProfileSerializers
+from .models import Organization, UserProfile, create_user_details
 from utils.pagination import GenericPagination
 from utils.custom_exception import ResponseError
 from assets.dropdown import organization_type
+from utils.custom_exception import ValidationError
 
 
 
@@ -120,4 +122,106 @@ class OrganizationListView(ListAPIView):
     pagination_class = GenericPagination
     ordering_fields = ["organization_id","organization_name", "organization_type","registered_year","city","state","county","zip_code","cin"]
     search_fields = ["organization_id","organization_name", "organization_type","registered_year","city","state","county","zip_code","cin"]
+
+
+
+class UserProfileView(APIView):
+    permission_classes = ([IsAuthenticated])
+    
+    def post(self, request):  
+        print(request.data,flush=True)
+        resume =  request.data.get('resume',None)
+        image = request.data.get('image',None)
+        created_by = self.request.user 
+        email = request.data.get('email',None)
+        password = request.data.get('password',None)
+        username = request.data.get('username',None)
+        first_name = request.data.get('first_name',None)
+        last_name = request.data.get('last_name',None)
+        is_active = request.data.get('is_active',False)
+        phone_number = request.data.get('phone_number',None)
+        alt_contact_number = request.data.get('alt_contact_number',None)
+        address = request.data.get('address',None)
+        city = request.data.get('city',None)
+        state = request.data.get('state',None)
+        country = request.data.get('country',None)
+        zip_code = request.data.get('zip_code',None)
+        gender = request.data.get('gender',None)
+        nationality = request.data.get('nationality',None)
+        organization = request.data.get('organization',None)
+
+        if not email:
+            resp = {
+                    'errorMessage': "This email is already in use, please try another",
+                    'resultCode': '0',
+                    'resultDescription': "This email is already in use, please try another",
+                    "actionPerformed": "Email address already exist while creating user",
+                }
+            return Response(resp, status=status.HTTP_200_OK)
         
+        if not username:
+            resp = {
+                    'errorMessage': "This username is already in use, please try another",
+                    'resultCode': '0',
+                    'resultDescription': "This email is already in use, please try another"
+                }
+            return Response(resp, status=status.HTTP_200_OK)
+        
+        if not password:
+            resp = {
+                    'errorMessage': "This password is already in use, please try another",
+                    'resultCode': '0',
+                    'resultDescription': "This email is already in use, please try another"
+                }
+            return Response(resp, status=status.HTTP_200_OK)
+        
+        if not first_name:
+            resp = {
+                    'errorMessage': "This first_name is already in use, please try another",
+                    'resultCode': '0',
+                    'resultDescription': "This email is already in use, please try another"
+                }
+            return Response(resp, status=status.HTTP_200_OK)
+        
+        if not last_name:
+            resp = {
+                    'errorMessage': "This last_name is already in use, please try another",
+                    'resultCode': '0',
+                    'resultDescription': "This email is already in use, please try another"
+                }
+            return Response(resp, status=status.HTTP_200_OK)
+        
+        
+        data= {'email':email,'password':password,'username':username,'first_name':first_name,
+               'last_name':last_name,'is_active':is_active,'phone_number':phone_number,
+               'alt_contact_number':alt_contact_number,'address':address,'city':city,'state':state,
+               'country':country,'zip_code':zip_code,'gender':gender,'nationality':nationality}
+        
+        context= {'resume':resume,'created_by':created_by,'organization':organization,'image':image}
+        user_ser = UserProfileSerializers(data=data,context = context)
+        
+        if user_ser.is_valid():
+            user_ser.save()
+            create_user_details(sender=UserProfile, instance=user_ser,created=True, resume=resume,image=image,created_by=created_by,organization=organization)
+            resp = {
+                "results": "Requested User added successfully",
+                "resultDescription": "Requested User added successfully",
+                "resultCode": "1"
+            }
+            return Response(resp, status=status.HTTP_200_OK)
+        else:
+            org_name = request.data.get('username') 
+            ser_key = list(user_ser.errors.keys())[0]
+            ser_val = ', '.join(user_ser.errors.get(ser_key))
+            raise ResponseError(f"{ser_val}",
+                                    f"Attempted to create User {org_name} but raised error {ser_key} {ser_val}")      
+
+
+
+class UserProfileListView(ListAPIView):
+    queryset = UserProfile.objects.all().order_by("-id")
+    serializer_class = UserProfileSerializers
+    # filter_backends = [OrderingFilter, SearchFilter]
+    pagination_class = GenericPagination
+    # ordering_fields = ["organization_id","organization_name", "organization_type","registered_year","city","state","county","zip_code","cin"]
+    # search_fields = ["organization_id","organization_name", "organization_type","registered_year","city","state","county","zip_code","cin"]

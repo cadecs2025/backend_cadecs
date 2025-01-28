@@ -1,12 +1,12 @@
 from rest_framework import serializers
-from .models import Organization
+from .models import Organization, UserProfile,ProfileImage,UserDetails
 from utils.custom_exception import ValidationError
 
 class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = '__all__'
-        read_only_fields = ['organization_id','created_at','created_by','organization_logo']
+        read_only_fields = ['organization_id','created_at','created_by']
     
 
     # def validate(self, data):       
@@ -58,7 +58,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         organization_name = validated_data.get('organization_name')  
         organization_type = validated_data.get('organization_type')
-        # organization_logo = validated_data.get('organization_logo')
+        organization_logo = validated_data.get('organization_logo')
         ceo_name = validated_data.get('ceo_name')
         registered_year = validated_data.get('registered_year')
         tax_number = validated_data.get('tax_number')  
@@ -81,7 +81,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
         org_obj = Organization.objects.create(
                                             organization_name=organization_name, 
                                             organization_type=organization_type,
-                                            # organization_logo=organization_logo, 
+                                            organization_logo=organization_logo, 
                                             ceo_name=ceo_name, 
                                             registered_year=registered_year,
                                             tax_number=tax_number,
@@ -130,4 +130,89 @@ class OrganizationSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-   
+class UserDetailsSerializers(serializers.ModelSerializer): 
+    organization_id = serializers.SerializerMethodField()   
+    class Meta:
+        model = UserDetails
+        fields = '__all__'
+    
+    def get_organization_id(self,obj): 
+        print(f"bcdnjcbd vjdhjv dhvjdv jd{obj.organization.id}",flush=True)       
+        organization_id = Organization.objects.filter(id=obj.organization.id).values('organization_id').first()
+        print(f"organization_id: {organization_id}",flush=True)
+        organiz = None
+        if organization_id:
+            organiz = organization_id.get('organization_id')
+        return organiz
+
+class UserProfileSerializers(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+    user_detail = serializers.SerializerMethodField()
+    class Meta:
+        model = UserProfile
+        fields = [
+            'email',
+            'password',
+            'username',
+            'first_name',
+            'last_name',            
+            'is_active',
+            'phone_number',            
+            'alt_contact_number',
+            'address',
+            'city',
+            'state',
+            'country',
+            'zip_code',
+            'gender',
+            'nationality',
+            'image',
+            'user_detail'
+
+        ]
+        read_only_fields = ['image','user_detail']
+
+    def get_image(self,obj):        
+        image_details = ProfileImage.objects.filter(user=obj.id).order_by('-id').values('image').first()
+        if image_details:
+            print(f"image_details: {image_details}",flush=True)
+            image  = image_details.get('image')
+            if image:
+                return image_details.image
+        return 'media/profileImage/default.png'
+    
+    def get_user_detail(self,obj):        
+        user_detail_details = UserDetailsSerializers(UserDetails.objects.filter(user=obj.id), many=True)
+        return user_detail_details.data
+    
+    
+    def create(self, validated_data):         
+        password = validated_data.pop('password')
+        user = UserProfile.objects.create(**validated_data)   
+        user.set_password(password)
+        user.save()
+
+        organization_id = self.context.get("organization")
+        resume = self.context.get("resume",None)
+        created_by = self.context.get("created_by",None)
+
+        print(f"Organizations:{organization_id} resume: {resume} created : {created_by}",flush=True)
+        try:
+            organization_id = int(organization_id)
+            org_obj = Organization.objects.get(id=organization_id)
+            print(f"Organizations objects: {org_obj}",flush=True)
+        except Exception as ex:
+            print(f"ex: {ex}",flush=True)
+        else:           
+            UserDetails.objects.create(user = user,
+                                    organization=org_obj,
+                                    resume=resume,
+                                    created_by = created_by,
+                                    )
+            print("UserDetails details created successfully",flush=True)
+
+        return user 
+        
+
+        
+        

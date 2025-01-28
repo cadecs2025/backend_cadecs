@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import (
 # from .views import DashboardView
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import OrganizationListView,OrganizationView,RegionView,OrganizationTypeView
+from .views import *
 
 
 
@@ -15,9 +15,11 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('organization-listing/', OrganizationListView.as_view()),
     path('organization/', OrganizationView.as_view()),
-    path('organization/<int:pk>', OrganizationView.as_view()),
+    path('organization/<int:pk>/', OrganizationView.as_view()),
     path('region/', RegionView.as_view()),
-    path('organization-type/', OrganizationTypeView.as_view())
+    path('organization-type/', OrganizationTypeView.as_view()),
+    path('create-user/', UserProfileView.as_view()),
+    path('user-listing/', UserProfileListView.as_view()),
     
 ]
 

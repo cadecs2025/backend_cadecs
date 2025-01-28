@@ -151,6 +151,7 @@ class UserProfileSerializers(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = [
+            'user_id',
             'email',
             'password',
             'username',
@@ -170,7 +171,7 @@ class UserProfileSerializers(serializers.ModelSerializer):
             'user_detail'
 
         ]
-        read_only_fields = ['image','user_detail']
+        read_only_fields = ['user_id','image','user_detail']
 
     def get_image(self,obj):        
         image_details = ProfileImage.objects.filter(user=obj.id).order_by('-id').values('image').first()

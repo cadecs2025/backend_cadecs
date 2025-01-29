@@ -188,7 +188,7 @@ class UserProfileView(APIView):
         username = request.data.get('username',None)
         first_name = request.data.get('first_name',None)
         last_name = request.data.get('last_name',None)
-        is_active = request.data.get('is_active',False)
+        is_active = request.data.get('is_active',True)
         phone_number = request.data.get('phone_number',None)
         alt_contact_number = request.data.get('alt_contact_number',None)
         address = request.data.get('address',None)

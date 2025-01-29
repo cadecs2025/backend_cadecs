@@ -21,30 +21,11 @@ class RegionView(APIView):
     def get(self,request):      
 
         search = request.query_params.get('search', None) 
-        with open('regions.json', 'r') as file:
+        with open('region.json', 'r') as file:
             filtered_data = json.load(file)  # Parse the JSON file into a Python dictionary 
 
 
-            for data in filtered_data:
-                key_lst = ['id','iso3','iso2','phone_code','capital','currency','currency_symbol','tld','native','region','subregion','timezones','translations','emoji','emojiU']
-
-                for key in key_lst:
-                    data.pop(key)
-
-        
-        
-        
-        
-            # del filtered_data['phone_code']
             
-            
-            
-            # for key in key_lst:
-
-            #     filtered_data.pop(key)   
-
-        print(f"3r34r34r4: {filtered_data}",flush=True)  
-        
         # if search:
         #     filtered_data = [
         #         item for item in data

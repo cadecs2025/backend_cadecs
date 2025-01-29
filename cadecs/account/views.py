@@ -14,6 +14,10 @@ from utils.pagination import GenericPagination
 from utils.custom_exception import ResponseError
 from assets.dropdown import organization_type
 from utils.custom_exception import ValidationError
+from utils.common_validators import FieldValidator
+
+
+fieldvalidator = FieldValidator()
 
 
 
@@ -125,13 +129,45 @@ class OrganizationView(APIView):
                 'resultDescription': f"Organization {org_data.organization_name} updated successfully",
                 
             }
-            return Response(resp, status=status.HTTP_200_OK)     
+            return Response(resp, status=status.HTTP_200_OK)   
+
+    def delete(self,request,pk=None):
+        payload = request.data
+        del_reason = payload.get('del_reason')
+        valid_reason = fieldvalidator.field_length_validator('del_reason', del_reason)
+        if not valid_reason:
+            raise ValidationError('Sorry, delete reason lenght must be between 3 to 200 character',
+                                      "Attempted deleting organization but delete organization length was invalid")        
+        
+        try:
+            organization = Organization.objects.get(pk=pk)            
+        except Exception as e:
+            raise ResponseError("Sorry, Organization Details not found",
+                                f"Attempted to delete organization. Organization doesnot exist") 
+        else:    
+            organization_id = organization.organization_id
+            print(f"organization_id: {organization_id}",flush=True)
+            # DeleteUser.objects.create(widget_name=widget_name,
+            #                             del_reason=del_reason,
+            #                             deleted_by=request.user.email) 
+            # X_AxisChartDetails.objects.filter(widget_id = pk).delete()
+            # Y_AxisChartDetails.objects.filter(widget_id = pk).delete()            
+            organization_id.is_deleted = True
+            organization_id.save()
+        
+            resp = {
+                'resultDescription': f"Organization {organization_id} is deleted Successfully",
+                'resultCode': '1',
+                "actionPerformed": f"""Organization {organization_id} has
+                                            been deleted successfully.""",
+            }
+            return Response(resp, status=status.HTTP_200_OK)  
     
 
         
 
 class OrganizationListView(ListAPIView):
-    queryset = Organization.objects.all().order_by("-id")
+    queryset = Organization.objects.filter(is_deleted=False).order_by("-id")
     serializer_class = OrganizationSerializer
     filter_backends = [OrderingFilter, SearchFilter]
     pagination_class = GenericPagination
@@ -236,11 +272,7 @@ class UserProfileView(APIView):
             user_data = UserProfile.objects.get(pk=pk)
         except:
             raise ResponseError("User id not found",f"Attempt to get user but id not found.")
-        else:    
-
-            print(f"user_data: {user_data}",flush=True)
-            print(f"request.data: {request.data}",flush=True)
-
+        else:
             resume =  request.data.get('resume',None)
             image = request.data.get('image',None)
             created_by = self.request.user.email
@@ -249,7 +281,7 @@ class UserProfileView(APIView):
             username = request.data.get('username',None)
             first_name = request.data.get('first_name',None)
             last_name = request.data.get('last_name',None)
-            is_active = request.data.get('is_active',False)
+            is_active = request.data.get('is_active',True)
             phone_number = request.data.get('phone_number',None)
             alt_contact_number = request.data.get('alt_contact_number',None)
             address = request.data.get('address',None)
@@ -287,10 +319,43 @@ class UserProfileView(APIView):
                 
             }
             return Response(resp, status=status.HTTP_200_OK) 
+    
+    
+    def delete(self,request,pk=None):
+        payload = request.data
+        del_reason = payload.get('del_reason')
+        valid_reason = fieldvalidator.field_length_validator('del_reason', del_reason)
+        if not valid_reason:
+            raise ValidationError('Sorry, delete reason lenght must be between 3 to 200 character',
+                                      "Attempted deleting user but delete user length was invalid")        
+        
+        try:
+            user_name = UserProfile.objects.get(pk=pk)            
+        except Exception as e:
+            raise ResponseError("Sorry, User Details not found",
+                                f"Attempted to delete user. User doesnot exist") 
+        else:    
+            user_id = user_name.user_id
+            print(f"user_id: {user_id}",flush=True)
+            # DeleteUser.objects.create(widget_name=widget_name,
+            #                             del_reason=del_reason,
+            #                             deleted_by=request.user.email) 
+            # X_AxisChartDetails.objects.filter(widget_id = pk).delete()
+            # Y_AxisChartDetails.objects.filter(widget_id = pk).delete()            
+            user_name.is_active = False
+            user_name.save()
+        
+            resp = {
+                'resultDescription': f"User {user_id} is deleted Successfully",
+                'resultCode': '1',
+                "actionPerformed": f"""User {user_id} has
+                                            been deleted successfully.""",
+            }
+            return Response(resp, status=status.HTTP_200_OK)
 
 
 class UserProfileListView(ListAPIView):
-    queryset = UserProfile.objects.all().order_by("-id")
+    queryset = UserProfile.objects.filter(is_active=True).order_by("-id")
     serializer_class = UserProfileSerializers
     # filter_backends = [OrderingFilter, SearchFilter]
     pagination_class = GenericPagination

@@ -21,14 +21,35 @@ class RegionView(APIView):
     def get(self,request):      
 
         search = request.query_params.get('search', None) 
-        with open('USCities.json', 'r') as file:
-            filtered_data = data = json.load(file)  # Parse the JSON file into a Python dictionary  
+        with open('regions.json', 'r') as file:
+            filtered_data = json.load(file)  # Parse the JSON file into a Python dictionary 
+
+
+            for data in filtered_data:
+                key_lst = ['id','iso3','iso2','phone_code','capital','currency','currency_symbol','tld','native','region','subregion','timezones','translations','emoji','emojiU']
+
+                for key in key_lst:
+                    data.pop(key)
+
         
-        if search:
-            filtered_data = [
-                item for item in data
-                if search.lower() in item['city'].lower() or search.lower() in item['state'].lower() or search.lower() in item['county'].lower()
-            ]       
+        
+        
+        
+            # del filtered_data['phone_code']
+            
+            
+            
+            # for key in key_lst:
+
+            #     filtered_data.pop(key)   
+
+        print(f"3r34r34r4: {filtered_data}",flush=True)  
+        
+        # if search:
+        #     filtered_data = [
+        #         item for item in data
+        #         if search.lower() in item['city'].lower() or search.lower() in item['state'].lower() or search.lower() in item['county'].lower()
+        #     ]       
 
         paginator = GenericPagination()  
         paginated_data = paginator.paginate_queryset(filtered_data, request) 

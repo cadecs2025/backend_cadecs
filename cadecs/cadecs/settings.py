@@ -140,16 +140,31 @@ DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 # AWS_LOCATION = 'media'
 
 # Media files configuration
-MEDIA_URL = f'https://{AWS_S3_CUSTOM_MEDIA_DOMAIN}/media/'
-MEDIA_ROOT = ''  # Not needed when using S3
+# MEDIA_URL = f'https://{AWS_S3_CUSTOM_MEDIA_DOMAIN}/media/'
+# MEDIA_ROOT = ''  # Not needed when using S3
 
 AWS_DEFAULT_ACL = 'public-read'  # Files are publicly readable
 
 # Static files configuration
-STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-STATIC_URL = f'https://{AWS_S3_CUSTOM_STATIC_DOMAIN}/static/'
+# STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# STATIC_URL = f'https://{AWS_S3_CUSTOM_STATIC_DOMAIN}/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+STATIC_URL = 'static/'
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT =  BASE_DIR / 'media'
+
+
+
+
+
+
+
+
 
 
 CORS_ALLOWED_ORIGINS = [

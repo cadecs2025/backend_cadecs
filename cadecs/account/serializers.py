@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Organization, UserProfile,ProfileImage,UserDetails
+from .models import * # Organization, UserProfile,ProfileImage,UserDetails
 from utils.custom_exception import ValidationError
 
 
@@ -10,10 +10,13 @@ class OrganizationDropDownSerializer(serializers.ModelSerializer):
         # read_only_fields = ['organization_id','created_at','created_by']
 
 class OrganizationSerializer(serializers.ModelSerializer):
+    # organization_logo = serializers.SerializerMethodField()
     class Meta:
         model = Organization
         fields = '__all__'
         read_only_fields = ['organization_id','created_at','created_by']
+    
+    
     
 
     # def validate(self, data):       
@@ -181,14 +184,30 @@ class UserProfileSerializers(serializers.ModelSerializer):
         ]
         read_only_fields = ['user_id','image','user_detail']
 
-    def get_image(self,obj):        
-        image_details = ProfileImage.objects.filter(user=obj.id).order_by('-id').values('image').first()
-        if image_details:
-            print(f"image_details: {image_details}",flush=True)
-            image  = image_details.get('image')
-            if image:
-                return image
-        return 'media/profileImage/default.png'
+    # def get_image(self,obj):        
+    #     image_details = ProfileImage.objects.filter(user=obj.id).order_by('-id').values('image').first()
+    #     if image_details:
+    #         print(f"image_details: {image_details}",flush=True)
+    #         image  = image_details.get('image')
+    #         if image:
+    #             return image
+    #     return 'media/profileImage/default.png'
+    
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        DefaultImage = '/media/profileImage/default.png'
+        default_img = request.build_absolute_uri(DefaultImage)
+        user_profile = ProfileImage.objects.filter(user=obj.id).first()
+
+        print(f"user_profile: {user_profile}",flush=True)
+        if user_profile:
+            image_url = user_profile.image.url
+            print(f"image_url: {image_url}")
+            if image_url:
+                # return image_url
+                return request.build_absolute_uri(image_url)
+        return default_img
     
     def get_user_detail(self,obj):        
         user_detail_details = UserDetailsSerializers(UserDetails.objects.filter(user=obj.id), many=True)
@@ -272,4 +291,25 @@ class UserProfileSerializers(serializers.ModelSerializer):
         return instance
 
         
+class OrganizationTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganizationType
+        fields = ['id','name','description']
+    
+    def create(self, validated_data):         
+        name = validated_data.pop('name')     
+        description = validated_data.pop('description')           
+
+        org_type_obj = OrganizationType.objects.create(
+                                            name=name, 
+                                            description=description                                                     
+                                            )           
+        return org_type_obj
+    
+    def update(self, instance, validated_data):            
         
+        instance.name = validated_data.get('name',instance.name)
+        instance.description = validated_data.get('description',instance.description) 
+
+        instance.save()
+        return instance  

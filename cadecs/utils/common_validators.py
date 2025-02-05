@@ -89,7 +89,7 @@ class FieldValidator:
     
     @staticmethod
     def field_length_validator(text_type, text):
-        if text_type in ['remarks', 'del_reason','alert_description']:
+        if text_type in ['remarks', 'del_reason']:
             text_strip = str(text).strip()
             number_of_chars = len(text_strip)
             if (number_of_chars >= 3 and number_of_chars <= 200):

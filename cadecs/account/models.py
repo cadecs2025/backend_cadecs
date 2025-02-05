@@ -121,6 +121,11 @@ class UserDetails(models.Model):
     updated_at = models.DateTimeField(auto_now_add=True,null=True)
 
 
+class OrganizationType(models.Model):
+    name = models.CharField(max_length=100,null=True)
+    description = models.TextField(null=True)
+
+
 @receiver(post_save, sender=UserProfile)
 def create_user_details(sender, instance, created, **kwargs):
     if created:  # Check if this is a new instance

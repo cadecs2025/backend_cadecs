@@ -8,8 +8,6 @@ from django.conf import settings
 from django.conf.urls.static import static
 from .views import *
 
-
-
 urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
@@ -22,6 +20,9 @@ urlpatterns = [
     path('create-user/', UserProfileView.as_view()),
     path('create-user/<int:pk>/', UserProfileView.as_view()),
     path('user-listing/', UserProfileListView.as_view()),
+    path('organization-type-listing/', OrganizationTypeListView.as_view()),
+    path('organization-type/', OrganizationTypeView.as_view()),
+    path('organization-type/<int:pk>/', OrganizationTypeView.as_view())
     
 ]
 

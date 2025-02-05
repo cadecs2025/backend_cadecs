@@ -277,7 +277,7 @@ class UserProfileView(APIView):
             image = request.data.get('image',None)
             created_by = self.request.user.email
             email = request.data.get('email',None)
-            password = request.data.get('password',None)
+            # password = request.data.get('password',None)
             username = request.data.get('username',None)
             first_name = request.data.get('first_name',None)
             last_name = request.data.get('last_name',None)
@@ -293,7 +293,7 @@ class UserProfileView(APIView):
             nationality = request.data.get('nationality',None)
             organization = request.data.get('organization',None)
 
-            data= {'email':email,'password':password,'username':username,'first_name':first_name,
+            data= {'email':email,'username':username,'first_name':first_name,
                'last_name':last_name,'is_active':is_active,'phone_number':phone_number,
                'alt_contact_number':alt_contact_number,'address':address,'city':city,'state':state,
                'country':country,'zip_code':zip_code,'gender':gender,'nationality':nationality}
@@ -368,3 +368,144 @@ class UserProfileListView(ListAPIView):
         print(f"user: {user}",flush=True)        
         queryset = queryset.exclude(email=user)  
         return queryset
+
+
+class OrganizationTypeView(APIView):
+    permission_classes = ([IsAuthenticated])
+    
+    def post(self, request):
+        name =  request.data.get('name',None)
+        description = request.data.get('description',None) 
+
+        if not name:
+            resp = {
+                    'errorMessage': "Organization type name not found. Kindly input organization type name.",
+                    'resultCode': '0',
+                    'resultDescription': "Organization type name not found. Kindly input organization type"
+                }
+            return Response(resp, status=status.HTTP_200_OK)   
+
+        organization_type_lst = OrganizationType.objects.values_list('name', flat=True) 
+
+        print(f"organization_type_lst: {organization_type_lst}",flush=True)
+        
+        if any(item.lower() == name.lower() for item in organization_type_lst):
+            print("Value found!")   
+            resp = {
+                    'errorMessage': "Organization type already exists. Kindly input another organization type name.",
+                    'resultCode': '0',
+                    'resultDescription': "Organization type already exists. Kindly input another organization type name."
+                }
+            return Response(resp, status=status.HTTP_200_OK)     
+        
+               
+        data= {'name':name,'description':description}
+        
+        org_type_ser = OrganizationTypeSerializer(data=data)
+        
+        if org_type_ser.is_valid():
+            org_type_ser.save()
+            resp = {
+                "results": "Requested organization type added successfully",
+                "resultDescription": "Requested organization type added successfully",
+                "resultCode": "1"
+            }
+            return Response(resp, status=status.HTTP_200_OK)
+        else:
+            ser_key = list(org_type_ser.errors.keys())[0]
+            ser_val = ', '.join(org_type_ser.errors.get(ser_key))
+            raise ResponseError(f"{ser_val}",
+                                    f"Attempted to create User {name} but raised error {ser_key} {ser_val}")      
+
+
+    def patch(self,request,pk=None):        
+        try:
+            org_type = OrganizationType.objects.get(pk=pk)
+        except:
+            raise ResponseError("Organization type id not found",f"Attempt to get organization type but id not found.")
+        else:
+            name =  request.data.get('name',None)
+            description = request.data.get('description',None)  
+
+            if not name:
+                resp = {
+                        'errorMessage': "Organization type name not found. Kindly input organization type name.",
+                        'resultCode': '0',
+                        'resultDescription': "Organization type name not found. Kindly input organization type"
+                    }
+                return Response(resp, status=status.HTTP_200_OK)
+
+            organization_type_lst = OrganizationType.objects.exclude(name=org_type.name).values_list('name', flat=True) 
+
+            print(f"organization_type_lst: {organization_type_lst}",flush=True)
+            
+            if any(item.lower() == name.lower() for item in organization_type_lst):
+                print("Value found!")   
+                resp = {
+                        'errorMessage': "Organization type already exists. Kindly input another organization type name.",
+                        'resultCode': '0',
+                        'resultDescription': "Organization type already exists. Kindly input another organization type name."
+                    }
+                return Response(resp, status=status.HTTP_200_OK)            
+            
+            
+            data= {'name':name,'description':description}
+        
+            org_type_ser = OrganizationTypeSerializer(org_type,data=data,partial=True)
+
+            if org_type_ser.is_valid(): 
+                org_type_ser.save()                
+            else:            
+                ser_key = list(org_type_ser.errors.keys())[0]
+                ser_val = ', '.join(org_type_ser.errors.get(ser_key))          
+                raise ResponseError(f"{ser_val}",
+                                    f"Attempted to update organizations {org_type.name} but raised error {ser_key} {ser_val}") 
+
+
+            resp = {
+                'results': f"Organization type {name} updated successfully",
+                'resultCode': '1',
+                'resultDescription': f"Organization type {name} updated successfully",
+                
+            }
+            return Response(resp, status=status.HTTP_200_OK) 
+    
+    
+    def delete(self,request,pk=None):
+        payload = request.data
+        del_reason = payload.get('del_reason')
+        valid_reason = fieldvalidator.field_length_validator('del_reason', del_reason)
+        if not valid_reason:
+            raise ValidationError('Sorry, delete reason lenght must be between 3 to 200 character',
+                                      "Attempted deleting organization type but delete organization length was invalid")        
+        
+        try:
+            organization_type = OrganizationType.objects.get(pk=pk)            
+        except Exception as e:
+            raise ResponseError("Sorry, organization type not found",
+                                f"Attempted to delete organization type. Organization type doesnot exist") 
+        else:    
+            organization_type_name = organization_type.name
+            organization_type.delete()            
+        
+            resp = {
+                'resultDescription': f"Organization type {organization_type_name} is deleted Successfully",
+                'resultCode': '1'
+            }
+            return Response(resp, status=status.HTTP_200_OK)
+
+
+class OrganizationTypeListView(ListAPIView):
+    queryset = OrganizationType.objects.all().order_by("-id")
+    serializer_class = OrganizationTypeSerializer
+    filter_backends = [OrderingFilter, SearchFilter]
+    pagination_class = GenericPagination
+    ordering_fields = ["name"]
+    search_fields = ["name"]
+
+    # def get_queryset(self):
+    #     queryset = super().get_queryset()
+    #     user = self.request.user
+    #     print(f"user: {user}",flush=True)        
+    #     queryset = queryset.exclude(email=user)  
+    #     return queryset

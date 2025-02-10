@@ -25,7 +25,8 @@ urlpatterns = [
     path('media/', MediaFileListView.as_view(), name='media-list-create'),
     path('menu-listing/', MenuListView.as_view(), name='menu-list-create'),
     path('roles/', RoleAPIView.as_view(), name='role-list-create'),
-    path('roles/<int:pk>/', RoleAPIView.as_view(), name='role-detail')
+    path('roles/<int:pk>/', RoleAPIView.as_view(), name='role-detail'),
+    path('roles-listing/', RoleListView.as_view())
     
 ]
 

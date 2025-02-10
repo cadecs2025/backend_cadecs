@@ -275,8 +275,8 @@ class OrganizationTypeSerializer(serializers.ModelSerializer):
         fields = ['id','name','description']
     
     def create(self, validated_data):         
-        name = validated_data.pop('name')     
-        description = validated_data.pop('description')           
+        name = validated_data.get('name')     
+        description = validated_data.get('description')           
 
         org_type_obj = OrganizationType.objects.create(
                                             name=name, 
@@ -305,10 +305,26 @@ class RolePermissionSerializer(serializers.ModelSerializer):
         fields = ['id', 'menu', 'can_view', 'can_edit', 'can_delete']
 
 class RoleSerializer(serializers.ModelSerializer):
-    permissions = RolePermissionSerializer(source='rolepermission_set', many=True, read_only=True)
 
     class Meta:
         model = Role
-        fields = ['id', 'name', 'organization', 'permissions']
+        fields = ['id','name', 'description']
+    
+    def create(self, validated_data):         
+        name = validated_data.get('name')     
+        description = validated_data.get('description')           
+
+        role_obj = Role.objects.create( name=name, 
+                                        description=description                                                     
+                                        )           
+        return role_obj
+    
+    def update(self, instance, validated_data):            
+        
+        instance.name = validated_data.get('name',instance.name)
+        instance.description = validated_data.get('description',instance.description) 
+
+        instance.save()
+        return instance 
 
 

@@ -504,52 +504,125 @@ class MenuListView(ListAPIView):
 
 
 class RoleAPIView(APIView):
-    """CRUD operations for Role"""
-
-    def get(self, request, *args, **kwargs):
-        """Retrieve all roles or a specific role by ID."""
-        role_id = kwargs.get('pk')
-        if role_id:
-            role = Role.objects.filter(id=role_id).first()
-            if not role:
-                return Response({"detail": "Role not found"}, status=status.HTTP_404_NOT_FOUND)
-            serializer = RoleSerializer(role)
-        else:
-            roles = Role.objects.all()
-            serializer = RoleSerializer(roles, many=True)
-        return Response(serializer.data)
+    """CRUD operations for Role"""   
 
     def post(self, request, *args, **kwargs):
-        """Create a new role."""
-        serializer = RoleSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        name =  request.data.get('name',None)
+        description = request.data.get('description',None) 
 
-    def put(self, request, pk, *args, **kwargs):
-        """Update an existing role."""
+        if not name:            
+            resp = {
+                    'errorMessage': "Role name not found. Kindly input role name.",
+                    'resultCode': '0',
+                    'resultDescription': "Role name not found. Kindly input valid role name."
+                }
+            return Response(resp, status=status.HTTP_200_OK)
+        
+        role_lst = Role.objects.filter(name=name).values_list('name', flat=True)         
+        
+        if any(item.lower() == name.lower() for item in role_lst):
+            print("Value found!")   
+            resp = {
+                    'errorMessage': "Role name already exists. Kindly input another role name.",
+                    'resultCode': '0',
+                    'resultDescription': "Role name already exists. Kindly input role name."
+                }
+            return Response(resp, status=status.HTTP_200_OK) 
+
+        
+        data= {'name':name,'description':description}
+        role_ser = RoleSerializer(data=data)
+        if role_ser.is_valid():
+            role_ser.save()
+            resp = {
+                "results": f"Requested Role {name} added successfully",
+                "resultDescription": f"Requested Role {name} added successfully",
+                "resultCode": "1"
+            }
+            return Response(resp, status=status.HTTP_200_OK)
+        else:
+            ser_key = list(role_ser.errors.keys())[0]
+            ser_val = ', '.join(role_ser.errors.get(ser_key))
+            raise ResponseError(f"{ser_val}",
+                                    f"Attempted to create User {name} but raised error {ser_key} {ser_val}")      
+
+
+    def patch(self, request, pk, *args, **kwargs):        
         role = Role.objects.filter(id=pk).first()
         if not role:
-            return Response({"detail": "Role not found"}, status=status.HTTP_404_NOT_FOUND)
-        serializer = RoleSerializer(role, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            raise ResponseError("Role id not found",f"Attempt to create role but id not found.")
+        
+        name =  request.data.get('name',None)
+        description = request.data.get('description',None) 
+
+        if not name:            
+            resp = {
+                    'errorMessage': "Role name not found. Kindly input role name.",
+                    'resultCode': '0',
+                    'resultDescription': "Role name not found. Kindly input valid role name."
+                }
+            return Response(resp, status=status.HTTP_200_OK)
+        
+
+        role_lst = Role.objects.exclude(name=role.name).values_list('name', flat=True)         
+        
+        if any(item.lower() == name.lower() for item in role_lst):
+            print("Value found!")   
+            resp = {
+                    'errorMessage': "Role name already exists. Kindly input another role name.",
+                    'resultCode': '0',
+                    'resultDescription': "Role name already exists. Kindly input role name."
+                }
+            return Response(resp, status=status.HTTP_200_OK)            
+        
+        data= {'name':name,'description':description}
+        role_ser = RoleSerializer(role, data=data,partial=True)
+        if role_ser.is_valid():
+            role_ser.save()
+            resp = {
+                "results": f"Requested Role {name} updated successfully",
+                "resultDescription": f"Requested Role {name} updated successfully",
+                "resultCode": "1"
+            }
+            return Response(resp, status=status.HTTP_200_OK)
+        else:
+            ser_key = list(role_ser.errors.keys())[0]
+            ser_val = ', '.join(role_ser.errors.get(ser_key))
+            raise ResponseError(f"{ser_val}",
+                                    f"Attempted to create User {name} but raised error {ser_key} {ser_val}")      
 
     def delete(self, request, pk, *args, **kwargs):
-        """Delete a role."""
-        role = Role.objects.filter(id=pk).first()
-        if not role:
-            return Response({"detail": "Role not found"}, status=status.HTTP_404_NOT_FOUND)
-        role.delete()
-        return Response({"detail": "Role deleted"}, status=status.HTTP_204_NO_CONTENT)
+        """Delete a role."""   
+    
+        payload = request.data
+        del_reason = payload.get('del_reason')
+        valid_reason = fieldvalidator.field_length_validator('del_reason', del_reason)
+        if not valid_reason:
+            raise ValidationError('Sorry, delete reason lenght must be between 3 to 200 character',
+                                      "Attempted deleting role but delete role length was invalid")        
+        
+        try:
+            role = Role.objects.get(pk=pk)            
+        except Exception as e:
+            raise ResponseError("Sorry, role name not found",
+                                f"Attempted to delete role. Role type doesnot exist") 
+        else:    
+            role_name = role.name
+            role.delete()            
+        
+            resp = {
+                'resultDescription': f"Role name:{role_name} is deleted Successfully",
+                'resultCode': '1'
+            }
+            return Response(resp, status=status.HTTP_200_OK)
 
-
-
-
-
+class RoleListView(ListAPIView):
+    queryset = Role.objects.all()
+    serializer_class = RoleSerializer
+    filter_backends = [OrderingFilter, SearchFilter]
+    pagination_class = GenericPagination
+    ordering_fields = ["name"]
+    search_fields = ["name"]
 
 
 

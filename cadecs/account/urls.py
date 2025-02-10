@@ -16,7 +16,6 @@ urlpatterns = [
     path('organization-dropdown/', OrganizationDropDownView.as_view()),
     path('organization/<int:pk>/', OrganizationView.as_view()),
     path('region/', RegionView.as_view()),
-    # path('organization-type/', OrganizationTypeView.as_view()),
     path('create-user/', UserProfileView.as_view()),
     path('create-user/<int:pk>/', UserProfileView.as_view()),
     path('user-listing/', UserProfileListView.as_view()),
@@ -24,8 +23,7 @@ urlpatterns = [
     path('organization-type/', OrganizationTypeView.as_view()),
     path('organization-type/<int:pk>/', OrganizationTypeView.as_view()),
     path('media/', MediaFileListView.as_view(), name='media-list-create'),
-    path('menus/', MenuAPIView.as_view(), name='menu-list-create'),
-    path('menus/<int:pk>/', MenuAPIView.as_view(), name='menu-detail'),
+    path('menu-listing/', MenuListView.as_view(), name='menu-list-create'),
     path('roles/', RoleAPIView.as_view(), name='role-list-create'),
     path('roles/<int:pk>/', RoleAPIView.as_view(), name='role-detail')
     

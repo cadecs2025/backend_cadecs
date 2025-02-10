@@ -129,21 +129,18 @@ class Menu(models.Model):
 
     def __str__(self):
         return self.name
-
+    
 class Role(models.Model):
     """Defines a role within an organization (e.g., Admin, Editor, Viewer)."""
-    name = models.CharField(max_length=50)
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    menus = models.ManyToManyField(Menu, through='RolePermission', related_name='roles')
-
-    def __str__(self):
-        return f"{self.name} - {self.organization.organization_name}"
-
+    name = models.CharField(max_length=50)    
+    description = models.TextField(blank=True, null=True)
+    
 
 class RolePermission(models.Model):
     """Defines specific permissions for a role on a menu (e.g., can_view, can_edit)."""
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
     menu = models.ForeignKey(Menu, on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE,null=True)
     can_view = models.BooleanField(default=False)
     can_edit = models.BooleanField(default=False)
     can_delete = models.BooleanField(default=False)
@@ -168,35 +165,10 @@ def create_user_details(sender, instance, created, **kwargs):
             file_obj.s3_file_upload(file_path= image_obj.image) 
 
             print("uploaded successfully",flush=True) 
-            os.remove(str(image_obj.image)) 
-
-            
-                    # print("uploaded successfully",flush=True)
-            
-            # organization_id = kwargs.get('organization')
-            # print(f"organization_id: {organization_id}",flush=True)
-            # # if organization_id:
-            #     try:
-            #         organization_id = int(organization_id)
-            #         org_obj = Organization.objects.get(id=organization_id)
-            #     except Exception as ex:
-            #         print(f"ex: {ex}",flush=True)
-            #     else:        
-            #         print(f"org_obj: {org_obj} kwargs: {kwargs}",flush=True)   
-            #         org_obj, created = Organization.objects.get_or_create(user = instance,
-            #                                 organization=org_obj,
-            #                                 resume=kwargs.get('resume'),
-            #                                 created_by = kwargs.get('created_by'),
-            #                                 )
-                    
-                    
-            #         print("Organizations details created successfully",flush=True)
+            os.remove(str(image_obj.image))           
             
         except:
-            pass
-
-
-        
+            pass       
     
      
     

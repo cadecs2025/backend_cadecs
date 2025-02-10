@@ -310,3 +310,5 @@ class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
         fields = ['id', 'name', 'organization', 'permissions']
+
+

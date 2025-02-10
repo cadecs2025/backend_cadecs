@@ -494,55 +494,13 @@ class OrganizationTypeListView(ListAPIView):
     ordering_fields = ["name"]
     search_fields = ["name"]
 
-    # def get_queryset(self):
-    #     queryset = super().get_queryset()
-    #     user = self.request.user
-    #     print(f"user: {user}",flush=True)        
-    #     queryset = queryset.exclude(email=user)  
-    #     return queryset
-
-class MenuAPIView(APIView):
-    """CRUD operations for Menu"""
-
-    def get(self, request, *args, **kwargs):
-        """Retrieve all menus or a specific menu by ID."""
-        menu_id = kwargs.get('pk')
-        if menu_id:
-            menu = Menu.objects.filter(id=menu_id).first()
-            if not menu:
-                return Response({"detail": "Menu not found"}, status=status.HTTP_404_NOT_FOUND)
-            serializer = MenuSerializer(menu)
-        else:
-            menus = Menu.objects.all()
-            serializer = MenuSerializer(menus, many=True)
-        return Response(serializer.data)
-
-    def post(self, request, *args, **kwargs):
-        """Create a new menu."""
-        serializer = MenuSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def put(self, request, pk, *args, **kwargs):
-        """Update an existing menu."""
-        menu = Menu.objects.filter(id=pk).first()
-        if not menu:
-            return Response({"detail": "Menu not found"}, status=status.HTTP_404_NOT_FOUND)
-        serializer = MenuSerializer(menu, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk, *args, **kwargs):
-        """Delete a menu."""
-        menu = Menu.objects.filter(id=pk).first()
-        if not menu:
-            return Response({"detail": "Menu not found"}, status=status.HTTP_404_NOT_FOUND)
-        menu.delete()
-        return Response({"detail": "Menu deleted"}, status=status.HTTP_204_NO_CONTENT)
+class MenuListView(ListAPIView):
+    queryset = Menu.objects.all()
+    serializer_class = MenuSerializer
+    filter_backends = [OrderingFilter, SearchFilter]
+    pagination_class = GenericPagination
+    ordering_fields = ["name","code"]
+    search_fields = ["name","code"]
 
 
 class RoleAPIView(APIView):
@@ -587,12 +545,6 @@ class RoleAPIView(APIView):
             return Response({"detail": "Role not found"}, status=status.HTTP_404_NOT_FOUND)
         role.delete()
         return Response({"detail": "Role deleted"}, status=status.HTTP_204_NO_CONTENT)
-
-
-
-
-
-
 
 
 

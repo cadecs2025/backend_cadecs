@@ -1,13 +1,16 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Permission
 from django.utils import timezone
 from os.path import splitext
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+import os
+import mimetypes
+import boto3
+from utils.upload_file import FileUpload
 
 
-# class Role(models.Model):
 
 
 
@@ -49,17 +52,10 @@ class UserProfile(AbstractUser):
             self.user_id = f"{new_user_id}"
         super().save(*args, **kwargs) 
     
-# def image_upload_to(instance, filename):
-#     now = timezone.now()
-#     base, extension = splitext(filename.lower())
-#     milliseconds = now.microsecond // 1000
-#     return f"profileImage/{base}_{now:%Y%m%d%H%M%S}{milliseconds}{extension}"
-
-
-DefaultImage = 'media/profileImage/default.png'
+DefaultImage = 'media/default.png'
 class ProfileImage(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='images/', default=DefaultImage)
+    image = models.ImageField(upload_to='media/', default=DefaultImage)
 
 class BaseModel(models.Model):
     created_by = models.ForeignKey(UserProfile,on_delete=models.CASCADE,null=True,blank=True)
@@ -78,7 +74,7 @@ class Organization(BaseModel):
     organization_id = models.IntegerField(unique=True, editable=False)
     organization_name = models.CharField(max_length=250)
     organization_type = models.CharField(max_length=100)
-    organization_logo = models.FileField(upload_to='images/',null=True)
+    organization_logo = models.FileField(upload_to='media/',null=True)
     ceo_name = models.CharField(max_length=100,null=True)
     registered_year = models.CharField(max_length=50)
     tax_number = models.CharField(max_length=100,null=True)
@@ -126,32 +122,74 @@ class OrganizationType(models.Model):
     description = models.TextField(null=True)
 
 
+class Menu(models.Model):
+    name = models.CharField(max_length=255)
+    code = models.SlugField(unique=True)  # Unique code for internal reference (e.g., 'dashboard')
+    description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+class Role(models.Model):
+    """Defines a role within an organization (e.g., Admin, Editor, Viewer)."""
+    name = models.CharField(max_length=50)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    menus = models.ManyToManyField(Menu, through='RolePermission', related_name='roles')
+
+    def __str__(self):
+        return f"{self.name} - {self.organization.organization_name}"
+
+
+class RolePermission(models.Model):
+    """Defines specific permissions for a role on a menu (e.g., can_view, can_edit)."""
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    menu = models.ForeignKey(Menu, on_delete=models.CASCADE)
+    can_view = models.BooleanField(default=False)
+    can_edit = models.BooleanField(default=False)
+    can_delete = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('role', 'menu')
+
+    def __str__(self):
+        return f"{self.role.name} - {self.menu.name} Permissions"
+
+
 @receiver(post_save, sender=UserProfile)
 def create_user_details(sender, instance, created, **kwargs):
     if created:  # Check if this is a new instance
         print(f"instance: {instance} kwargs: {kwargs}",flush=True)
         try:
-            ProfileImage.objects.create(user = instance,
+            image_obj,created = ProfileImage.objects.get_or_create(user = instance,
                                             image=kwargs.get('image')                                            
                                             )
             print("profile image created successfully",flush=True)
+            file_obj = FileUpload()
+            file_obj.s3_file_upload(file_path= image_obj.image) 
+
+            print("uploaded successfully",flush=True) 
+
             
-            organization_id = kwargs.get('organization')
-            print(f"organization_id: {organization_id}",flush=True)
-            if organization_id:
-                try:
-                    organization_id = int(organization_id)
-                    org_obj = Organization.objects.get(id=organization_id)
-                except Exception as ex:
-                    print(f"ex: {ex}",flush=True)
-                else:        
-                    print(f"org_obj: {org_obj} kwargs: {kwargs}",flush=True)   
-                    Organization.objects.create(user = instance,
-                                            organization=org_obj,
-                                            resume=kwargs.get('resume'),
-                                            created_by = kwargs.get('created_by'),
-                                            )
-                    print("Organizations details created successfully",flush=True)
+                    # print("uploaded successfully",flush=True)
+            
+            # organization_id = kwargs.get('organization')
+            # print(f"organization_id: {organization_id}",flush=True)
+            # # if organization_id:
+            #     try:
+            #         organization_id = int(organization_id)
+            #         org_obj = Organization.objects.get(id=organization_id)
+            #     except Exception as ex:
+            #         print(f"ex: {ex}",flush=True)
+            #     else:        
+            #         print(f"org_obj: {org_obj} kwargs: {kwargs}",flush=True)   
+            #         org_obj, created = Organization.objects.get_or_create(user = instance,
+            #                                 organization=org_obj,
+            #                                 resume=kwargs.get('resume'),
+            #                                 created_by = kwargs.get('created_by'),
+            #                                 )
+                    
+                    
+            #         print("Organizations details created successfully",flush=True)
             
         except:
             pass
@@ -161,6 +199,10 @@ def create_user_details(sender, instance, created, **kwargs):
     
      
     
-    
+class MediaFile(models.Model):
+    file = models.FileField(upload_to='media/')
+
+    def __str__(self):
+        return self.title
     
 

@@ -1,6 +1,27 @@
 from rest_framework import serializers
 from .models import * # Organization, UserProfile,ProfileImage,UserDetails
 from utils.custom_exception import ValidationError
+import os
+from .models import MediaFile
+from utils.upload_file import FileUpload
+
+
+class MediaFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MediaFile
+        fields = ['id', 'file']
+    
+    def create(self, validated_data):
+        file = validated_data.get('file') 
+        obj, media_obj = MediaFile.objects.get_or_create(file=file)
+
+        print(f"obj fle name file: {obj.file}",flush=True)  
+
+        file_obj = FileUpload()
+        file_obj.s3_file_upload(file_path= obj.file)  
+        
+        print("uploaded successfully",flush=True)      
+        return obj
 
 
 class OrganizationDropDownSerializer(serializers.ModelSerializer):
@@ -14,56 +35,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = '__all__'
-        read_only_fields = ['organization_id','created_at','created_by']
-    
-    
-    
-
-    # def validate(self, data):       
-        
-    #     organization_name = data.get('organization_name') 
-    #     if not organization_name:
-    #         raise ValidationError("organization_name not found. Please input valid organization_name.")
-
-    #     organization_type = data.get('organization_type')
-    #     if not organization_type:
-    #         raise ValidationError("organization_type not found. Please input valid organization_type")
-        
-    #     organization_logo = data.get('organization_logo')
-    #     if not organization_logo:
-    #         raise ValidationError("organization_logo not found. Please input valid organization_logo")
-        
-    #     ceo_name = data.get('ceo_name')
-    #     if not ceo_name:
-    #         raise ValidationError("ceo_name not found. Please input valid ceo_name.")
-        
-    #     registered_year = data.get('registered_year')  
-    #     if not registered_year:
-    #         raise ValidationError("registered_year not found. Please input valid registered_year")
-        
-    #     tax_number = data.get('tax_number') 
-    #     if not tax_number:
-    #         raise ValidationError("tax_number not found. Please input valid tax_number")
-        
-    #     contact_person = data.get('contact_person') 
-    #     if not contact_person:
-    #         raise ValidationError("contact_person not found. Please input valid contact_person")
-        
-    #     email = data.get('email')
-    #     if not email:
-    #         raise ValidationError("email not found. Please input valid email")       
-        
-    #     website_url = data.get('website_url')
-    #     phone_number = data.get('phone_number')
-    #     alt_contact_number = data.get('alt_contact_number')
-    #     address = data.get('address')
-    #     city = data.get('city')
-    #     state = data.get('state')
-    #     county = data.get('county')
-    #     zip_code = data.get('zip_code')
-    #     cin = data.get('cin')       
-    #     return data
-    
+        read_only_fields = ['organization_id','created_at','created_by']    
 
     def create(self, validated_data):
         organization_name = validated_data.get('organization_name')  
@@ -84,11 +56,8 @@ class OrganizationSerializer(serializers.ModelSerializer):
         zip_code = validated_data.get('zip_code')      
         cin = validated_data.get('cin')
         created_by = self.context.get("created_by")
-
-
-        print(f"""{organization_name}-{organization_type}-{ceo_name}-{registered_year}-{tax_number}-{contact_person}-{email}-{website_url}-{phone_number}-{alt_contact_number}-{address}-{city}-{state}-{county}-{zip_code}-{cin}-{created_by}""")
         
-        org_obj = Organization.objects.create(
+        org_obj,created = Organization.objects.get_or_create(
                                             organization_name=organization_name, 
                                             organization_type=organization_type,
                                             organization_logo=organization_logo, 
@@ -107,8 +76,14 @@ class OrganizationSerializer(serializers.ModelSerializer):
                                             zip_code = zip_code,
                                             cin = cin,
                                             created_by = created_by          
-                                            )          
+                                            )  
+
+        print(f"obj fle name file: {org_obj.organization_logo}",flush=True)  
+
+        file_obj = FileUpload()
+        file_obj.s3_file_upload(file_path= org_obj.organization_logo)  
         
+        print("uploaded successfully",flush=True)            
         
         
         return org_obj
@@ -133,11 +108,16 @@ class OrganizationSerializer(serializers.ModelSerializer):
         instance.county = validated_data.get('county',instance.county) 
         instance.zip_code = validated_data.get('zip_code',instance.zip_code) 
         instance.cin = validated_data.get('cin',instance.cin)
-        instance.created_by = validated_data.get('created_by',instance.created_by) 
+        instance.created_by = validated_data.get('created_by',instance.created_by)
 
-        print(f"""{instance.organization_name}-{instance.organization_type}-{instance.website_url}-{instance.email}-{instance.phone_number}""")     
-        
         instance.save()
+
+        print(f"obj fle name file: {instance.organization_logo}",flush=True)  
+
+        file_obj = FileUpload()
+        file_obj.s3_file_upload(file_path= instance.organization_logo)  
+        
+        print("uploaded successfully",flush=True)        
         return instance
 
 class UserDetailsSerializers(serializers.ModelSerializer): 
@@ -147,9 +127,7 @@ class UserDetailsSerializers(serializers.ModelSerializer):
         fields = '__all__'
     
     def get_organization_id(self,obj): 
-        print(f"bcdnjcbd vjdhjv dhvjdv jd{obj.organization.id}",flush=True)       
         organization_id = Organization.objects.filter(id=obj.organization.id).values('organization_id').first()
-        print(f"organization_id: {organization_id}",flush=True)
         organiz = None
         if organization_id:
             organiz = organization_id.get('organization_id')
@@ -183,15 +161,6 @@ class UserProfileSerializers(serializers.ModelSerializer):
 
         ]
         read_only_fields = ['user_id','image','user_detail']
-
-    # def get_image(self,obj):        
-    #     image_details = ProfileImage.objects.filter(user=obj.id).order_by('-id').values('image').first()
-    #     if image_details:
-    #         print(f"image_details: {image_details}",flush=True)
-    #         image  = image_details.get('image')
-    #         if image:
-    #             return image
-    #     return 'media/profileImage/default.png'
     
 
     def get_image(self, obj):
@@ -216,15 +185,14 @@ class UserProfileSerializers(serializers.ModelSerializer):
     
     def create(self, validated_data):         
         password = validated_data.pop('password')
-        user = UserProfile.objects.create(**validated_data)   
+        user = UserProfile.objects.get(**validated_data)   
         user.set_password(password)
-        user.save()
+        user.save()       
 
         organization_id = self.context.get("organization")
         resume = self.context.get("resume",None)
         created_by = self.context.get("created_by",None)
 
-        print(f"Organizations:{organization_id} resume: {resume} created : {created_by}",flush=True)
         try:
             organization_id = int(organization_id)
             org_obj = Organization.objects.get(id=organization_id)
@@ -232,12 +200,19 @@ class UserProfileSerializers(serializers.ModelSerializer):
         except Exception as ex:
             print(f"ex: {ex}",flush=True)
         else:           
-            UserDetails.objects.create(user = user,
+            user_detail_obj,created = UserDetails.objects.get_or_create(user = user,
                                     organization=org_obj,
                                     resume=resume,
                                     created_by = created_by,
                                     )
+            
             print("UserDetails details created successfully",flush=True)
+
+            file_obj = FileUpload()
+            file_obj.s3_file_upload(file_path= user_detail_obj.resume)  
+            
+            print("uploaded successfully",flush=True)  
+
 
         return user 
         
@@ -313,3 +288,22 @@ class OrganizationTypeSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance  
+
+class MenuSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Menu
+        fields = ['id', 'name', 'code', 'description']
+
+class RolePermissionSerializer(serializers.ModelSerializer):
+    menu = MenuSerializer()  # Nested menu serializer
+
+    class Meta:
+        model = RolePermission
+        fields = ['id', 'menu', 'can_view', 'can_edit', 'can_delete']
+
+class RoleSerializer(serializers.ModelSerializer):
+    permissions = RolePermissionSerializer(source='rolepermission_set', many=True, read_only=True)
+
+    class Meta:
+        model = Role
+        fields = ['id', 'name', 'organization', 'permissions']

@@ -12,7 +12,6 @@ from .serializers import *
 from .models import Organization, UserProfile, create_user_details
 from utils.pagination import GenericPagination
 from utils.custom_exception import ResponseError
-from assets.dropdown import organization_type
 from utils.custom_exception import ValidationError
 from utils.common_validators import FieldValidator
 
@@ -41,14 +40,6 @@ class RegionView(APIView):
         
         return paginator.get_paginated_response(paginated_data) 
     
-class OrganizationTypeView(APIView):
-    def get(self,request):  
-        resp = {
-                "results": organization_type,                
-                "resultCode": "1"
-            }
-        return Response(resp, status=status.HTTP_200_OK)  
-
 class OrganizationDropDownView(APIView):
     permission_classes = [IsAuthenticated] 
 
@@ -509,3 +500,143 @@ class OrganizationTypeListView(ListAPIView):
     #     print(f"user: {user}",flush=True)        
     #     queryset = queryset.exclude(email=user)  
     #     return queryset
+
+class MenuAPIView(APIView):
+    """CRUD operations for Menu"""
+
+    def get(self, request, *args, **kwargs):
+        """Retrieve all menus or a specific menu by ID."""
+        menu_id = kwargs.get('pk')
+        if menu_id:
+            menu = Menu.objects.filter(id=menu_id).first()
+            if not menu:
+                return Response({"detail": "Menu not found"}, status=status.HTTP_404_NOT_FOUND)
+            serializer = MenuSerializer(menu)
+        else:
+            menus = Menu.objects.all()
+            serializer = MenuSerializer(menus, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        """Create a new menu."""
+        serializer = MenuSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, pk, *args, **kwargs):
+        """Update an existing menu."""
+        menu = Menu.objects.filter(id=pk).first()
+        if not menu:
+            return Response({"detail": "Menu not found"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = MenuSerializer(menu, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, *args, **kwargs):
+        """Delete a menu."""
+        menu = Menu.objects.filter(id=pk).first()
+        if not menu:
+            return Response({"detail": "Menu not found"}, status=status.HTTP_404_NOT_FOUND)
+        menu.delete()
+        return Response({"detail": "Menu deleted"}, status=status.HTTP_204_NO_CONTENT)
+
+
+class RoleAPIView(APIView):
+    """CRUD operations for Role"""
+
+    def get(self, request, *args, **kwargs):
+        """Retrieve all roles or a specific role by ID."""
+        role_id = kwargs.get('pk')
+        if role_id:
+            role = Role.objects.filter(id=role_id).first()
+            if not role:
+                return Response({"detail": "Role not found"}, status=status.HTTP_404_NOT_FOUND)
+            serializer = RoleSerializer(role)
+        else:
+            roles = Role.objects.all()
+            serializer = RoleSerializer(roles, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        """Create a new role."""
+        serializer = RoleSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, pk, *args, **kwargs):
+        """Update an existing role."""
+        role = Role.objects.filter(id=pk).first()
+        if not role:
+            return Response({"detail": "Role not found"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = RoleSerializer(role, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, *args, **kwargs):
+        """Delete a role."""
+        role = Role.objects.filter(id=pk).first()
+        if not role:
+            return Response({"detail": "Role not found"}, status=status.HTTP_404_NOT_FOUND)
+        role.delete()
+        return Response({"detail": "Role deleted"}, status=status.HTTP_204_NO_CONTENT)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class MediaFileListView(APIView):
+    """
+    APIView to list all media files and their S3 URLs.
+    """
+    def get(self, request, *args, **kwargs):
+        media_files = MediaFile.objects.all()
+        serializer = MediaFileSerializer(media_files, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request, *args, **kwargs):
+        serializer = MediaFileSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()  # This saves the file to your S3 bucket
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+   

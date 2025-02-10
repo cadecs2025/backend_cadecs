@@ -122,53 +122,25 @@ USE_I18N = True
 
 USE_TZ = True
 
-# AWS credentials
+
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_MEDIA_NAME = os.environ.get('AWS_STORAGE_BUCKET_MEDIA_NAME')
-AWS_STORAGE_BUCKET_STATIC_NAME = os.environ.get('AWS_STORAGE_BUCKET_STATIC_NAME')
-
-# Set a custom domain for S3
-AWS_S3_CUSTOM_MEDIA_DOMAIN = f'{AWS_STORAGE_BUCKET_MEDIA_NAME}.s3.amazonaws.com'
-AWS_S3_CUSTOM_STATIC_DOMAIN = f'{AWS_STORAGE_BUCKET_STATIC_NAME}.s3.amazonaws.com'
-
-# Set the region
-AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME') 
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_MEDIA_NAME')
+AWS_S3_REGION_NAME =  os.environ.get('AWS_S3_REGION_NAME') 
+AWS_QUERYSTRING_AUTH = False
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
 
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-
-# AWS_LOCATION = 'media'
-
-# Media files configuration
-# MEDIA_URL = f'https://{AWS_S3_CUSTOM_MEDIA_DOMAIN}/media/'
-# MEDIA_ROOT = ''  # Not needed when using S3
-
-AWS_DEFAULT_ACL = 'public-read'  # Files are publicly readable
-
-# Static files configuration
-# STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-# STATIC_URL = f'https://{AWS_S3_CUSTOM_STATIC_DOMAIN}/static/'
+# MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/'
+MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+AWS_DEFAULT_ACL = 'public-read'  # Or 'private' for private files
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-
 STATIC_URL = 'static/'
-MEDIA_URL = '/media/'
-
-MEDIA_ROOT =  BASE_DIR / 'media'
-
-
-
-
-
-
-
-
 
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:4200',  # Your Angular app
+    'http://localhost:4200',  
 ]
 
 CORS_ALLOW_HEADERS = [
@@ -187,17 +159,13 @@ CORS_ALLOW_METHODS = [
     'OPTIONS',
 ]
 
-
-
-
-
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),  # Customize access token expiration
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),    # Customize refresh token expiration
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),  
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),    
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,  # Use your Django SECRET_KEY or another key
+    'SIGNING_KEY': SECRET_KEY,  
     'VERIFYING_KEY': None,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id',

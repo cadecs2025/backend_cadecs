@@ -168,7 +168,7 @@ def create_user_details(sender, instance, created, **kwargs):
             file_obj.s3_file_upload(file_path= image_obj.image) 
 
             print("uploaded successfully",flush=True) 
-            os.remove(image_obj.image) 
+            os.remove(str(image_obj.image)) 
 
             
                     # print("uploaded successfully",flush=True)

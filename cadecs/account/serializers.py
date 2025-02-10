@@ -84,7 +84,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
         file_obj.s3_file_upload(file_path= org_obj.organization_logo)  
         
         print("uploaded successfully",flush=True)  
-        os.remove(org_obj.organization_logo)          
+        os.remove(str(org_obj.organization_logo))       
         
         
         return org_obj
@@ -119,7 +119,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
         file_obj.s3_file_upload(file_path= instance.organization_logo)  
         
         print("uploaded successfully",flush=True)    
-        os.remove(instance.organization_logo)     
+        os.remove(str(instance.organization_logo))     
         return instance
 
 class UserDetailsSerializers(serializers.ModelSerializer): 
@@ -214,7 +214,7 @@ class UserProfileSerializers(serializers.ModelSerializer):
             file_obj.s3_file_upload(file_path= user_detail_obj.resume)  
             
             print("uploaded successfully",flush=True)  
-            os.remove(user_detail_obj.resume)  
+            os.remove(str(user_detail_obj.resume))  
 
 
         return user 

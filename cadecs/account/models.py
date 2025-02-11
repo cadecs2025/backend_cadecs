@@ -134,6 +134,7 @@ class Role(models.Model):
     """Defines a role within an organization (e.g., Admin, Editor, Viewer)."""
     name = models.CharField(max_length=50)    
     description = models.TextField(blank=True, null=True)
+    menu = models.ManyToManyField('Menu', through='RolePermission')
     
 
 class RolePermission(models.Model):

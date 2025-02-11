@@ -4,6 +4,7 @@ from utils.custom_exception import ValidationError
 import os
 from .models import MediaFile
 from utils.upload_file import FileUpload
+from cadecs.settings import MEDIA_URL
 
 
 class MediaFileSerializer(serializers.ModelSerializer):
@@ -166,19 +167,19 @@ class UserProfileSerializers(serializers.ModelSerializer):
     
 
     def get_image(self, obj):
-        request = self.context.get('request')
-        DefaultImage = '/media/profileImage/default.png'
-        default_img = request.build_absolute_uri(DefaultImage)
+        # request = self.context.get('request')
+        DefaultImage = f'{MEDIA_URL}/media/default.png'
+        # default_img = request.build_absolute_uri(DefaultImage)
         user_profile = ProfileImage.objects.filter(user=obj.id).first()
 
         print(f"user_profile: {user_profile}",flush=True)
         if user_profile:
             image_url = user_profile.image.url
-            print(f"image_url: {image_url}")
+            print(f"image_url: {image_url}",flush=True)
             if image_url:
                 # return image_url
-                return request.build_absolute_uri(image_url)
-        return default_img
+                return image_url #request.build_absolute_uri(image_url)
+        return DefaultImage
     
     def get_user_detail(self,obj):        
         user_detail_details = UserDetailsSerializers(UserDetails.objects.filter(user=obj.id), many=True)

@@ -253,12 +253,12 @@ class UserProfileView(APIView):
             user_ser.save()
             create_user_details(sender=UserProfile, instance=user_ser,created=True, resume=resume,image=image,created_by=created_by,organization=organization)
             
-            # subject = 'Cadecs send you username and password'
-            # message = f"""Username: {username} \n Password: {password}"""
-            # from_email = 'your-email@gmail.com'  
-            # recipient_list = ['mohd.younus9097@gmail.com']  
+            subject = 'Cadecs send you username and password'
+            message = f"""Welcome {username}, your username password given below: \n Username: {username} \n Password: {password}"""
+            from_email = 'cadecsdevelopment@gmail.com'  
+            recipient_list = [email]  
 
-            # send_mail(subject, message, from_email, recipient_list)
+            send_mail(subject, message, from_email, recipient_list)
             
             resp = {
                 "results": "Requested User added successfully",
@@ -344,11 +344,7 @@ class UserProfileView(APIView):
         else:    
             user_id = user_name.user_id
             print(f"user_id: {user_id}",flush=True)
-            # DeleteUser.objects.create(widget_name=widget_name,
-            #                             del_reason=del_reason,
-            #                             deleted_by=request.user.email) 
-            # X_AxisChartDetails.objects.filter(widget_id = pk).delete()
-            # Y_AxisChartDetails.objects.filter(widget_id = pk).delete()            
+                        
             user_name.is_active = False
             user_name.save()
         
@@ -696,11 +692,21 @@ class MediaFileListView(APIView):
     APIView to list all media files and their S3 URLs.
     """
     def get(self, request, *args, **kwargs):
+        subject = 'Cadecs send you username and password'
+        message = f"""Hi Younus How are you"""
+        from_email = 'cadecsdevelopment@gmail.com'  
+        recipient_list = ['younus.mohd9097@gmail.com']  
+
+        send_mail(subject, message, from_email, recipient_list)
+
+        print("mail send successfully",flush=True)
         media_files = MediaFile.objects.all()
         serializer = MediaFileSerializer(media_files, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     def post(self, request, *args, **kwargs):
+
+        
         serializer = MediaFileSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()  # This saves the file to your S3 bucket

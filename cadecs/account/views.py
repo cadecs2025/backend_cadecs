@@ -79,13 +79,22 @@ class OrganizationView(APIView):
             }
             return Response(resp, status=status.HTTP_200_OK)
     
-    def post(self, request):           
+    def post(self, request):  
+        organization_name = request.data.get('organization_name')
+        email = request.data.get('email')         
         user = self.request.user          
         context={'created_by':user}
         orgs_ser = OrganizationSerializer(data=request.data,context=context)       
         
         if orgs_ser.is_valid():
             orgs_ser.save()
+
+            subject = 'Welcome letter to Cadecs'
+            message = f"""Hi {organization_name},\n\nYours organization registered successfully in cades.\n\nThanks & Regrads\nCADECS"""
+            from_email = 'cadecsdevelopment@gmail.com'  
+            recipient_list = [email]  
+
+            send_mail(subject, message, from_email, recipient_list)
             resp = {
                 "results": "Requested Organization added successfully",
                 "resultDescription": "Requested Organization added successfully",

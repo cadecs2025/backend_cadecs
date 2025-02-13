@@ -85,7 +85,8 @@ class OrganizationSerializer(serializers.ModelSerializer):
         file_obj.s3_file_upload(file_path= org_obj.organization_logo)  
         
         print("uploaded successfully",flush=True)  
-        os.remove(str(org_obj.organization_logo))       
+        os.remove(str(org_obj.organization_logo))   
+        print("file removed successfully",flush=True)    
         
         
         return org_obj
@@ -124,7 +125,9 @@ class OrganizationSerializer(serializers.ModelSerializer):
         return instance
 
 class UserDetailsSerializers(serializers.ModelSerializer): 
-    organization_id = serializers.SerializerMethodField()   
+    organization_id = serializers.SerializerMethodField()  
+    organization =  serializers.SerializerMethodField()
+    role =  serializers.SerializerMethodField()
     class Meta:
         model = UserDetails
         fields = '__all__'
@@ -135,6 +138,21 @@ class UserDetailsSerializers(serializers.ModelSerializer):
         if organization_id:
             organiz = organization_id.get('organization_id')
         return organiz
+    
+    def get_organization(self,obj): 
+        organization_name = Organization.objects.filter(id=obj.organization.id).values('organization_name').first()
+        organiz = None
+        if organization_name:
+            organiz = organization_name.get('organization_name')
+        return organiz
+    
+    def get_role(self,obj): 
+        role = Role.objects.filter(id=obj.role.id).values('name').first()
+        organiz = None
+        if role:
+            organiz = role.get('name')
+        return organiz
+
 
 class UserProfileSerializers(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
@@ -168,13 +186,13 @@ class UserProfileSerializers(serializers.ModelSerializer):
 
     def get_image(self, obj):
         # request = self.context.get('request')
-        DefaultImage = f'{MEDIA_URL}/media/default.png'
+        DefaultImage = f'{MEDIA_URL}media/default.png'
         # default_img = request.build_absolute_uri(DefaultImage)
         user_profile = ProfileImage.objects.filter(user=obj.id).first()
 
         print(f"user_profile: {user_profile}",flush=True)
         if user_profile:
-            image_url = user_profile.image.url
+            image_url = user_profile.image
             print(f"image_url: {image_url}",flush=True)
             if image_url:
                 # return image_url
@@ -188,13 +206,20 @@ class UserProfileSerializers(serializers.ModelSerializer):
     
     def create(self, validated_data):         
         password = validated_data.pop('password')
-        user = UserProfile.objects.get(**validated_data)   
+        user = UserProfile.objects.create(**validated_data)   
         user.set_password(password)
-        user.save()       
+        user.save()
+               
 
         organization_id = self.context.get("organization")
         resume = self.context.get("resume",None)
         created_by = self.context.get("created_by",None)
+        role_id = self.context.get("role",None)
+
+        try:
+            role_obj = Role.objects.get(id=role_id)
+        except:
+            pass
 
         try:
             organization_id = int(organization_id)
@@ -207,6 +232,7 @@ class UserProfileSerializers(serializers.ModelSerializer):
                                     organization=org_obj,
                                     resume=resume,
                                     created_by = created_by,
+                                    role= role_obj
                                     )
             
             print("UserDetails details created successfully",flush=True)
@@ -215,7 +241,9 @@ class UserProfileSerializers(serializers.ModelSerializer):
             file_obj.s3_file_upload(file_path= user_detail_obj.resume)  
             
             print("uploaded successfully",flush=True)  
-            os.remove(str(user_detail_obj.resume))  
+            os.remove(str(user_detail_obj.resume)) 
+        
+         
 
 
         return user 

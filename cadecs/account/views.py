@@ -9,14 +9,21 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import *
+from utils.jwt_decode import decode_jwt
 from .models import Organization, UserProfile, create_user_details
 from utils.pagination import GenericPagination
 from utils.custom_exception import ResponseError
 from utils.custom_exception import ValidationError
 from utils.common_validators import FieldValidator
-
+from .CustomJWTSerializers import CustomTokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+from django.core.mail import send_mail
 
 fieldvalidator = FieldValidator()
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 
@@ -190,6 +197,7 @@ class UserProfileView(APIView):
         gender = request.data.get('gender',None)
         nationality = request.data.get('nationality',None)
         organization = request.data.get('organization',None)
+        role = request.data.get('role',None)
 
         if not email:
             resp = {
@@ -238,12 +246,20 @@ class UserProfileView(APIView):
                'alt_contact_number':alt_contact_number,'address':address,'city':city,'state':state,
                'country':country,'zip_code':zip_code,'gender':gender,'nationality':nationality}
         
-        context= {'resume':resume,'created_by':created_by,'organization':organization,'image':image}
+        context= {'resume':resume,'created_by':created_by,'organization':organization,'image':image,'role':role}
         user_ser = UserProfileSerializers(data=data,context = context)
         
         if user_ser.is_valid():
             user_ser.save()
             create_user_details(sender=UserProfile, instance=user_ser,created=True, resume=resume,image=image,created_by=created_by,organization=organization)
+            
+            # subject = 'Cadecs send you username and password'
+            # message = f"""Username: {username} \n Password: {password}"""
+            # from_email = 'your-email@gmail.com'  
+            # recipient_list = ['mohd.younus9097@gmail.com']  
+
+            # send_mail(subject, message, from_email, recipient_list)
+            
             resp = {
                 "results": "Requested User added successfully",
                 "resultDescription": "Requested User added successfully",
@@ -346,6 +362,7 @@ class UserProfileView(APIView):
 
 
 class UserProfileListView(ListAPIView):
+    permission_classes = ([IsAuthenticated])
     queryset = UserProfile.objects.filter(is_active=True).order_by("-id")
     serializer_class = UserProfileSerializers
     # filter_backends = [OrderingFilter, SearchFilter]
@@ -355,10 +372,35 @@ class UserProfileListView(ListAPIView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        user = self.request.user
-        print(f"user: {user}",flush=True)        
-        queryset = queryset.exclude(email=user)  
-        return queryset
+        print(f"self.request: {self.request}",flush=True)
+        print(f"self.request: {self.request.headers}",flush=True)
+        jwt_token = self.request.headers.get('Authorization')
+
+        jwt_response =  decode_jwt(jwt_token)
+        print(f"jwt_response: {jwt_response}",flush=True)
+        organization =  jwt_response.get('organization')         
+
+        if organization == 'cadecs':
+            user = self.request.user
+            print(f"user: {user}",flush=True)        
+            queryset = queryset.exclude(email=user)  
+            return queryset
+        else:
+            organization_id = Organization.objects.filter(organization_name=organization,is_deleted=False).first()
+            total_user = UserDetails.objects.filter(organization=organization_id).values_list('user',flat=True)
+            print(f"total_user: {total_user}",flush=True)
+
+            queryset = queryset.filter(id__in=total_user)  
+            return queryset
+
+
+
+
+
+        
+        
+        
+        
 
 
 class OrganizationTypeView(APIView):

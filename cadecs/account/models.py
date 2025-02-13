@@ -104,11 +104,17 @@ class Organization(BaseModel):
 
     def __str__(self):
         return self.organization_name
+
+class Role(models.Model):
+    """Defines a role within an organization (e.g., Admin, Editor, Viewer)."""
+    name = models.CharField(max_length=50)    
+    description = models.TextField(blank=True, null=True)
+    menu = models.ManyToManyField('Menu', through='RolePermission')
     
 
 class UserDetails(models.Model):
     user = models.ForeignKey(UserProfile,on_delete=models.CASCADE)
-    # role = models.ForeignKey(Role,on_delete=models.CASCADE)
+    role = models.ForeignKey(Role,on_delete=models.CASCADE,null=True)
     organization = models.ForeignKey(Organization,on_delete=models.CASCADE,null=True)
     resume = models.FileField(upload_to='resume/',null=True)
     created_by = models.CharField(max_length=100,null=True)
@@ -130,11 +136,7 @@ class Menu(models.Model):
     def __str__(self):
         return self.name
     
-class Role(models.Model):
-    """Defines a role within an organization (e.g., Admin, Editor, Viewer)."""
-    name = models.CharField(max_length=50)    
-    description = models.TextField(blank=True, null=True)
-    menu = models.ManyToManyField('Menu', through='RolePermission')
+
     
 
 class RolePermission(models.Model):

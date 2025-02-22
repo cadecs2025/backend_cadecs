@@ -18,6 +18,7 @@ from utils.common_validators import FieldValidator
 from .CustomJWTSerializers import CustomTokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.core.mail import send_mail
+from .utils.extract_resume import ExtractData
 
 fieldvalidator = FieldValidator()
 
@@ -728,27 +729,30 @@ class RoleListView(ListAPIView):
 
 
 
+class ExtractResumeDetailsView(APIView):
+    def post(self,request):
+        
+        resume =  request.data.get('resume',None)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        print(f"resume: {resume}",flush=True)
+        
+        if str(resume).lower().endswith(".pdf"):
+            extract_obj = ExtractData()
+            extract_data = extract_obj.extract_information(resume)
+            resp = {
+                'result': extract_data,
+                'resultCode': '1',
+                "resultDescription": f"""Extract data from resume.""",
+            }
+            return Response(resp, status=status.HTTP_200_OK)
+        
+        else:
+            resp = {
+                'result': [],
+                'resultCode': '1',
+                "resultDescription": f"""Invalid file. kindly pass valid pdf file.""",
+            }
+            return Response(resp, status=status.HTTP_200_OK)
 
 
 class MediaFileListView(APIView):

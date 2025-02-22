@@ -85,9 +85,8 @@ class OrganizationSerializer(serializers.ModelSerializer):
         file_obj.s3_file_upload(file_path= org_obj.organization_logo)  
         
         print("uploaded successfully",flush=True)  
-        os.remove(str(org_obj.organization_logo))   
-        print("file removed successfully",flush=True)    
-        
+        # os.remove(str(org_obj.organization_logo))   
+        print("file removed successfully",flush=True)        
         
         return org_obj
     
@@ -116,27 +115,33 @@ class OrganizationSerializer(serializers.ModelSerializer):
         instance.save()
 
         print(f"obj fle name file: {instance.organization_logo}",flush=True)  
+        print(f"obj fle name file: {str(instance.organization_logo)}",flush=True)
 
+        # if not str(instance.organization_logo).startswith("https://"):
         file_obj = FileUpload()
-        file_obj.s3_file_upload(file_path= instance.organization_logo)  
+        file_obj.s3_file_upload(file_path= str(instance.organization_logo))  
         
         print("uploaded successfully",flush=True)    
-        os.remove(str(instance.organization_logo))     
+            # os.remove(str(instance.organization_logo))
+        # else:
+        #     validated_data.pop(instance.organization_logo)
+
         return instance
 
 class UserDetailsSerializers(serializers.ModelSerializer): 
     organization_id = serializers.SerializerMethodField()  
     organization =  serializers.SerializerMethodField()
     role =  serializers.SerializerMethodField()
+    role_id =  serializers.SerializerMethodField()
     class Meta:
         model = UserDetails
         fields = '__all__'
     
     def get_organization_id(self,obj): 
-        organization_id = Organization.objects.filter(id=obj.organization.id).values('organization_id').first()
+        organization_id = Organization.objects.filter(id=obj.organization.id).values('id').first()
         organiz = None
         if organization_id:
-            organiz = organization_id.get('organization_id')
+            organiz = organization_id.get('id')
         return organiz
     
     def get_organization(self,obj): 
@@ -151,6 +156,13 @@ class UserDetailsSerializers(serializers.ModelSerializer):
         organiz = None
         if role:
             organiz = role.get('name')
+        return organiz
+    
+    def get_role_id(self,obj): 
+        role = Role.objects.filter(id=obj.role.id).values('id').first()
+        organiz = None
+        if role:
+            organiz = role.get('id')
         return organiz
 
 
@@ -196,7 +208,7 @@ class UserProfileSerializers(serializers.ModelSerializer):
             print(f"image_url: {image_url}",flush=True)
             if image_url:
                 # return image_url
-                return image_url #request.build_absolute_uri(image_url)
+                return f'{MEDIA_URL}{image_url}' #request.build_absolute_uri(image_url)
         return DefaultImage
     
     def get_user_detail(self,obj):        
@@ -213,13 +225,30 @@ class UserProfileSerializers(serializers.ModelSerializer):
 
         organization_id = self.context.get("organization")
         resume = self.context.get("resume",None)
+        image = self.context.get("image",None)
         created_by = self.context.get("created_by",None)
         role_id = self.context.get("role",None)
 
+        role_obj = None
         try:
             role_obj = Role.objects.get(id=role_id)
         except:
             pass
+
+        try:
+            image_obj,created = ProfileImage.objects.get_or_create(user = user,
+                                            image=image                                            
+                                            )
+            print("profile image created successfully",flush=True)
+            file_obj = FileUpload()
+            file_obj.s3_file_upload(file_path= image_obj.image) 
+
+            # if image:
+            #     print("uploaded successfully",flush=True) 
+            #     os.remove(str(image_obj.image))           
+            
+        except:
+            pass  
 
         try:
             organization_id = int(organization_id)
@@ -241,10 +270,8 @@ class UserProfileSerializers(serializers.ModelSerializer):
             file_obj.s3_file_upload(file_path= user_detail_obj.resume)  
             
             print("uploaded successfully",flush=True)  
-            os.remove(str(user_detail_obj.resume)) 
-        
-         
-
+            # if resume:
+            #     os.remove(str(user_detail_obj.resume)) 
 
         return user 
         
@@ -266,33 +293,65 @@ class UserProfileSerializers(serializers.ModelSerializer):
         resume = self.context.get("resume",None)
         created_by = self.context.get("created_by",None)
         image = self.context.get("image",None)
+        role_id = self.context.get("role",None)
+        
+        role_obj = None
+        if role_id:            
+            try:
+                role_obj = Role.objects.get(id=role_id)
+            except:
+                pass
+        else:
+            users= UserDetails.objects.filter(user = instance.id).first()
+            role_obj = users.role
+
+            # if not resume:
+                # resume = str(users.resume)
+                # print(f"resume: {resume}",flush=True)
+
 
         print(f"created_by: {created_by}",flush=True)
+        file_obj = FileUpload()
+        # if image:            
+        ProfileImage.objects.filter(user=instance).delete()            
+        try:
+            image_obj,created = ProfileImage.objects.get_or_create(user = instance,
+                                            image=image                                            
+                                            )
+            print("profile image created successfully",flush=True)
+            
+            file_obj.s3_file_upload(file_path= image_obj.image) 
 
-        ProfileImage.objects.filter(user=instance).update(image=image)
+            # if image:
+            #     print("uploaded successfully",flush=True) 
+            #     os.remove(str(image_obj.image)) 
+        except:
+            pass  
 
+        
         try:
             organization_id = int(organization_id)
             org_obj = Organization.objects.get(id=organization_id)
             print(f"Organizations objects: {org_obj}",flush=True)
         except Exception as ex:
             print(f"ex: {ex}",flush=True)
-        else:           
-            user_details=UserDetails.objects.filter(user = instance.id)
-            print(f"user_details: {user_details}",flush=True)           
+        else:                      
+            UserDetails.objects.filter(user = instance.id).delete()            
+            user_detail_obj,created = UserDetails.objects.get_or_create(user = instance,
+                                organization=org_obj,
+                                resume=resume,
+                                created_by = created_by,
+                                role= role_obj
+                                )
+            
+            print("UserDetails details created successfully",flush=True)
 
-            if user_details:
-                user_details.update(            
-                                    organization=org_obj,
-                                    resume=resume,
-                                    updated_by = created_by,
-                                    )
-            else:
-                UserDetails.objects.create(user = instance,
-                                    organization=org_obj,
-                                    resume=resume,
-                                    created_by = created_by,
-                                    )                           
+            file_obj = FileUpload()
+            file_obj.s3_file_upload(file_path= user_detail_obj.resume)  
+            
+            print("uploaded successfully",flush=True)  
+            #if resume:
+            #    os.remove(str(user_detail_obj.resume))                                  
         
         instance.save()
         return instance

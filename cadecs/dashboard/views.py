@@ -19,7 +19,7 @@ class DashboardView(APIView):
         user_id = jwt_response.get('user_id')                    
 
         if organization == 'cadecs': 
-            if role == 'Admin':
+            if role == 'Super Admin':
                 total_user = UserProfile.objects.filter(is_active=True)
                 total_user = total_user.exclude(id=user_id)  
                 user_count=total_user.count()
@@ -32,10 +32,11 @@ class DashboardView(APIView):
         else:
             if role == 'Admin':
                 organization_id = Organization.objects.filter(organization_name=organization,is_deleted=False).first()
+                print(f"organization_id: {organization_id}",flush=True)
                 total_user = UserDetails.objects.filter(organization=organization_id)
                 total_user = total_user.exclude(id=user_id)                      
                 user_count=total_user.count()
-                dict_data = {'total_user':total_user}
+                dict_data = {'total_user':user_count}
             else:
                 dict_data = {}                
         

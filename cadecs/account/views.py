@@ -10,7 +10,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import *
 from utils.jwt_decode import decode_jwt
-from .models import Organization, UserProfile, create_user_details
+from .models import Organization, UserProfile #, create_user_details
 from utils.pagination import GenericPagination
 from utils.custom_exception import ResponseError
 from utils.custom_exception import ValidationError
@@ -89,12 +89,15 @@ class OrganizationView(APIView):
         if orgs_ser.is_valid():
             orgs_ser.save()
 
-            subject = 'Welcome letter to Cadecs'
-            message = f"""Hi {organization_name},\n\nYours organization registered successfully in cades.\n\nThanks & Regrads\nCADECS"""
-            from_email = 'cadecsdevelopment@gmail.com'  
-            recipient_list = [email]  
+            try:
+                subject = 'Welcome letter to Cadecs'
+                message = f"""Hi {organization_name},\n\nYours organization registered successfully in cades.\n\nThanks & Regrads\nCADECS"""
+                from_email = 'cadecsdevelopment@gmail.com'  
+                recipient_list = [email]  
 
-            send_mail(subject, message, from_email, recipient_list)
+                send_mail(subject, message, from_email, recipient_list)
+            except:
+                pass
             resp = {
                 "results": "Requested Organization added successfully",
                 "resultDescription": "Requested Organization added successfully",
@@ -118,7 +121,52 @@ class OrganizationView(APIView):
             print(f"org_data: {org_data}",flush=True)
             print(f"request.data: {request.data}",flush=True)
 
-            orgs_ser = OrganizationSerializer(org_data,data=request.data,partial=True)
+            # organization_logo = request.data.get('organization_logo',None)
+            # print(f"organization_logo: {organization_logo}",flush=True)
+            organization_name = request.data.get('organization_name')  
+            organization_type = request.data.get('organization_type')
+            organization_logo = request.data.get('organization_logo',None)
+            ceo_name = request.data.get('ceo_name')
+            registered_year = request.data.get('registered_year')
+            tax_number = request.data.get('tax_number')  
+            contact_person = request.data.get('contact_person') 
+            email = request.data.get('email')
+            website_url = request.data.get('website_url') 
+            phone_number = request.data.get('phone_number') 
+            alt_contact_number = request.data.get('alt_contact_number') 
+            address = request.data.get('address')
+            city = request.data.get('city') 
+            state = request.data.get('state') 
+            county = request.data.get('county') 
+            zip_code = request.data.get('zip_code')      
+            cin = request.data.get('cin')
+            created_by = self.request.user
+
+            print(f"organization_logo: {organization_logo}",flush=True)
+
+            
+
+            if organization_logo is None or organization_logo=='':
+                data = {'organization_logo': None,'organization_name':organization_name,
+                    'organization_type':organization_type,'ceo_name':ceo_name,
+                    'registered_year':registered_year,'tax_number':tax_number,'contact_person':contact_person,
+                    'email':email,'website_url':website_url,'phone_number':phone_number,'alt_contact_number':alt_contact_number,
+                    'address':address,'city':city,'state':state,'county':county,'zip_code':zip_code,'cin':cin,'created_by':created_by}
+            else:
+                if not str(organization_logo).startswith("https://"):
+                    data = {'organization_logo': organization_logo,'organization_name':organization_name,
+                    'organization_type':organization_type,'ceo_name':ceo_name,
+                    'registered_year':registered_year,'tax_number':tax_number,'contact_person':contact_person,
+                    'email':email,'website_url':website_url,'phone_number':phone_number,'alt_contact_number':alt_contact_number,
+                    'address':address,'city':city,'state':state,'county':county,'zip_code':zip_code,'cin':cin,'created_by':created_by}
+                else:                
+                    data = {'organization_name':organization_name,
+                    'organization_type':organization_type,'ceo_name':ceo_name,
+                    'registered_year':registered_year,'tax_number':tax_number,'contact_person':contact_person,
+                    'email':email,'website_url':website_url,'phone_number':phone_number,'alt_contact_number':alt_contact_number,
+                    'address':address,'city':city,'state':state,'county':county,'zip_code':zip_code,'cin':cin,'created_by':created_by}
+
+            orgs_ser = OrganizationSerializer(org_data,data=data,partial=True)
 
             if orgs_ser.is_valid(): 
                 print(f"serializers is valid: ",flush=True)
@@ -159,8 +207,8 @@ class OrganizationView(APIView):
             #                             deleted_by=request.user.email) 
             # X_AxisChartDetails.objects.filter(widget_id = pk).delete()
             # Y_AxisChartDetails.objects.filter(widget_id = pk).delete()            
-            organization_id.is_deleted = True
-            organization_id.save()
+            # organization_id.is_deleted = True
+            organization.delete()
         
             resp = {
                 'resultDescription': f"Organization {organization_id} is deleted Successfully",
@@ -260,14 +308,17 @@ class UserProfileView(APIView):
         
         if user_ser.is_valid():
             user_ser.save()
-            create_user_details(sender=UserProfile, instance=user_ser,created=True, resume=resume,image=image,created_by=created_by,organization=organization)
+            # create_user_details(sender=UserProfile, instance=user_ser,created=True, resume=resume,image=image,created_by=created_by,organization=organization)
             
-            subject = 'Cadecs send you username and password'
-            message = f"""Welcome {username}, your username password given below: \n Username: {username} \n Password: {password}"""
-            from_email = 'cadecsdevelopment@gmail.com'  
-            recipient_list = [email]  
+            try:
+                subject = 'Cadecs send you username and password'
+                message = f"""Welcome {username}, your username password given below: \n Username: {username} \n Password: {password}"""
+                from_email = 'cadecsdevelopment@gmail.com'  
+                recipient_list = [email]  
 
-            send_mail(subject, message, from_email, recipient_list)
+                send_mail(subject, message, from_email, recipient_list)
+            except:
+                pass
             
             resp = {
                 "results": "Requested User added successfully",
@@ -351,11 +402,15 @@ class UserProfileView(APIView):
             raise ResponseError("Sorry, User Details not found",
                                 f"Attempted to delete user. User doesnot exist") 
         else:    
-            user_id = user_name.user_id
+            user_id = user_name.username
             print(f"user_id: {user_id}",flush=True)
+
+            user_detail = UserDetails.objects.filter(user_id=user_name.id).delete()  
                         
-            user_name.is_active = False
-            user_name.save()
+            # user_name.is_active = False
+            # user_name.save()
+
+            user_name.delete()
         
             resp = {
                 'resultDescription': f"User {user_id} is deleted Successfully",

@@ -155,23 +155,24 @@ class RolePermission(models.Model):
         return f"{self.role.name} - {self.menu.name} Permissions"
 
 
-@receiver(post_save, sender=UserProfile)
-def create_user_details(sender, instance, created, **kwargs):
-    if created:  # Check if this is a new instance
-        print(f"instance: {instance} kwargs: {kwargs}",flush=True)
-        try:
-            image_obj,created = ProfileImage.objects.get_or_create(user = instance,
-                                            image=kwargs.get('image')                                            
-                                            )
-            print("profile image created successfully",flush=True)
-            file_obj = FileUpload()
-            file_obj.s3_file_upload(file_path= image_obj.image) 
+# @receiver(post_save, sender=UserProfile)
+# def create_user_details(sender, instance, created, **kwargs):
+#     if created:  # Check if this is a new instance
+#         print(f"instance: {instance} kwargs: {kwargs}",flush=True)
+#         try:
+#             image_obj,created = ProfileImage.objects.get_or_create(user = instance,
+#                                             image=kwargs.get('image')                                            
+#                                             )
+#             print("profile image created successfully",flush=True)
+#             file_obj = FileUpload()
+#             file_obj.s3_file_upload(file_path= image_obj.image) 
 
-            print("uploaded successfully",flush=True) 
-            os.remove(str(image_obj.image))           
+#             if kwargs.get('image'):
+#                 print("uploaded successfully",flush=True) 
+#                 os.remove(str(image_obj.image))           
             
-        except:
-            pass       
+#         except:
+#             pass       
     
      
     

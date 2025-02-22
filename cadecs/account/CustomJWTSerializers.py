@@ -15,10 +15,12 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         if not organization:
             organization_name = 'cadecs'
-            role = "Admin"
+            role = "Super Admin"
+            organization_id = None
         else:
             organization_name= organization.organization.organization_name
             role = organization.role.name
+            organization_id = organization.organization.id
 
         print(f"organization: {organization}",flush=True)
 
@@ -26,5 +28,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['role'] = role # Assuming `role` is a field on your User model
         token['email'] = user.email
         token['organization'] = organization_name
+        token['organization_id'] = organization_id
 
         return token

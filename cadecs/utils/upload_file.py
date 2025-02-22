@@ -5,7 +5,8 @@ import os
 
 class FileUpload:
 
-    def s3_file_upload(self,file_path):
+    def s3_file_upload(self,file_path):       
+        
 
         print(f"AWS_ACCESS_KEY_ID: {os.getenv('AWS_ACCESS_KEY_ID')}",flush=True)
         print(f"AWS_SECRET_ACCESS_KEY: {os.getenv('AWS_SECRET_ACCESS_KEY')}",flush=True)
@@ -35,5 +36,6 @@ class FileUpload:
             print("uploaded successfully",flush=True) 
 
             return True
-        except:
+        except Exception as ex:
+            print(f"exceptiona: {ex}",flush=True)
             return False

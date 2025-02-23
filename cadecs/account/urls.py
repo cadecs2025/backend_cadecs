@@ -29,7 +29,8 @@ urlpatterns = [
     path('roles/<int:pk>/', RoleAPIView.as_view(), name='role-detail'),
     path('roles-listing/', RoleListView.as_view()),
     path('extract-resume-data/', ExtractResumeDetailsView.as_view()),
-    path('extract-org-data/', ExtractOrganizationDetailsView.as_view())
+    path('extract-org-data/', ExtractOrganizationDetailsView.as_view()),
+    path('extract-client-location-data/', ExtractfacilitylocationView.as_view())   
     
 ]
 

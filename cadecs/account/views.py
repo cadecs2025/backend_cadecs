@@ -730,20 +730,14 @@ class RoleListView(ListAPIView):
 
 
 class ExtractResumeDetailsView(APIView):
-    def post(self,request):
-        
-        resume =  request.data.get('resume',None)
-
-        print(f"resume: {resume}",flush=True)
-        
+    def post(self,request):        
+        resume =  request.data.get('resume',None)        
         if str(resume).lower().endswith(".pdf"):
             extract_obj = ExtractData()
             extract_data = extract_obj.extract_information(resume)
 
             email = extract_data.get('email')
             phone = extract_data.get('phone')
-
-            print(f"email: {email} phone: {phone}")
 
             if not email and not phone:
                 resp = {
@@ -772,15 +766,10 @@ class ExtractResumeDetailsView(APIView):
 class ExtractOrganizationDetailsView(APIView):
     def post(self,request):
         
-        org_file =  request.data.get('org_file',None)
-
-        print(f"organization_file: {org_file}",flush=True)
-        
+        org_file =  request.data.get('org_file',None)        
         if str(org_file).lower().endswith(".pdf"):
             extract_obj = ExtractData()
             extract_data = extract_obj.extract_text_from_pdf(org_file)
-
-            print(f"extract_data: {extract_data}",flush=True)
 
             lines = extract_data.split("\n")
 
@@ -803,9 +792,7 @@ class ExtractOrganizationDetailsView(APIView):
                 if 'Org contact name' in line:
                     org_details['org_contact_name'] = data_lst[1].lstrip()
                 if 'Website Url'  in line:
-                    org_details['website_url'] = data_lst[3][2:]
-
-            
+                    org_details['website_url'] = data_lst[3][2:]            
 
             if not org_name and not org_email:
                 resp = {
@@ -819,6 +806,59 @@ class ExtractOrganizationDetailsView(APIView):
                 'result': org_details,
                 'resultCode': '1',
                 "resultDescription": f"""Extract data from organization details file.""",
+            }
+            return Response(resp, status=status.HTTP_200_OK)
+        
+        else:
+            resp = {
+                'result': [],
+                'resultCode': '0',
+                "resultDescription": f"""Invalid file. kindly pass valid pdf file.""",
+            }
+            return Response(resp, status=status.HTTP_200_OK)
+
+class ExtractfacilitylocationView(APIView):
+    def post(self,request):
+        
+        facility_location_file =  request.data.get('file',None)        
+        if str(facility_location_file).lower().endswith(".pdf"):
+            extract_obj = ExtractData()
+            extract_data = extract_obj.extract_text_from_pdf(facility_location_file)
+
+            lines = extract_data.split("\n")
+
+            facility_location_lst = []
+            valid_file = False            
+            
+            for line in lines:
+                if 'Zip Code Client' in line:
+                    valid_file = True
+                    
+                zip_code_dict = {}
+                if 'Zip Code Client' not in line:
+                    print(f"line: {line}")
+                    data = line.split()
+                    print(f"data: {data}")
+                    try:
+
+                        zip_code_dict['zip_code'] = data[0]
+                        zip_code_dict['client_ratio'] = data[1]
+                    except:
+                        pass
+                    facility_location_lst.append(zip_code_dict)           
+
+            if not valid_file:
+                resp = {
+                'result': "Invalid file. kindly insert valid client location file.",
+                'resultCode': '0',
+                "resultDescription": f"""Invalid file. kindly pass valid pdf file.""",
+                }
+                return Response(resp, status=status.HTTP_200_OK)            
+            
+            resp = {
+                'result': facility_location_lst,
+                'resultCode': '1',
+                "resultDescription": f"""Extract data from client location file.""",
             }
             return Response(resp, status=status.HTTP_200_OK)
         

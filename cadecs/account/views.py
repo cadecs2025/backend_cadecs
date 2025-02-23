@@ -456,14 +456,6 @@ class UserProfileListView(ListAPIView):
 
 
 
-
-
-        
-        
-        
-        
-
-
 class OrganizationTypeView(APIView):
     permission_classes = ([IsAuthenticated])
     
@@ -871,11 +863,103 @@ class ExtractfacilitylocationView(APIView):
             return Response(resp, status=status.HTTP_200_OK)
 
 
+class ClientLocationView(APIView):
+    def post(self, request, *args, **kwargs):
+        location_ratio = request.data.get('location_ratio',None) 
+        created_by = self.request.user.email
+
+        if not location_ratio:
+            resp = {
+                    'result': "Location ratio not found. Kindly input valid location ratio",
+                    'resultCode': '0',
+                    "resultDescription": "Location ratio not found. Kindly input valid location ratio",
+                }
+            return Response(resp, status=status.HTTP_200_OK)
+        
+        try:
+            valid_location_ratio = json.loads(location_ratio)
+        except:
+            resp = {
+                    'result': "Invalid location ratio. Kindly input valid location ratio",
+                    'resultCode': '0',
+                    "resultDescription": "Invalid location ratio. Kindly input valid location ratio",
+                }
+            return Response(resp, status=status.HTTP_200_OK)
+        
+        if not isinstance(valid_location_ratio, list):
+            resp = {
+                    'result': "Location ratio not in list format. Kindly input valid location ratio",
+                    'resultCode': '0',
+                    "resultDescription": "Location ratio not in list format. Kindly input valid location ratio",
+                }
+            return Response(resp, status=status.HTTP_200_OK)        
+
+        print(f"location_ration:{valid_location_ratio} type: {type(valid_location_ratio)}",flush=True)
+        valid_location_ratio_lst = []
+        for data in valid_location_ratio:
+            organization_id = data.get('org_id')
+            zip = data.get('zip')
+            client_ratio=data.get('client_ratio')
+            if not zip:
+                resp = {
+                    'result': "Zip code not found. Kindly input valid Zip code",
+                    'resultCode': '0',
+                    "resultDescription": "Zip code not found. Kindly input valid Zip code",
+                }
+                return Response(resp, status=status.HTTP_200_OK)
+            
+            if not client_ratio:
+                resp = {
+                    'result': "Client ratio not found. Kindly input valid client ratio",
+                    'resultCode': '0',
+                    "resultDescription": "Client ratio not found. Kindly input valid client ratio"
+                }
+                return Response(resp, status=status.HTTP_200_OK)
+            
+            if not isinstance(client_ratio, int):
+                resp = {
+                        'result': "Client ratio not in int format. Kindly input valid location ratio",
+                        'resultCode': '0',
+                        "resultDescription": "Client ratio not in int format. Kindly input valid location ratio",
+                    }
+                return Response(resp, status=status.HTTP_200_OK)   
+            
+            try:
+                organization_id = int(organization_id)
+                org_obj = Organization.objects.get(id=organization_id)
+                print(f"Organizations objects: {org_obj}",flush=True)
+            except Exception as ex:
+                resp = {
+                    'result': "Invalid organization. Kindly input valid organization id",
+                    'resultCode': '0',
+                    "resultDescription": "Invalid organization. Kindly input valid organization id"
+                }
+                return Response(resp, status=status.HTTP_200_OK)
+            else:  
+                pass
+                valid_location_ratio_lst.append(ClientLocation(organization=org_obj,
+                                                            zip=zip,
+                                                            client_ratio=client_ratio,
+                                                            created_by=created_by,
+                                                            ))     
+        print(f"valid_location_ratio_lst: {valid_location_ratio_lst}",flush=True)                        
+        ClientLocation.objects.bulk_create(valid_location_ratio_lst)         
+        
+        resp = {
+            "results": f"Requested client location created successfully",
+            "resultDescription": f"Requested client location created successfully",
+            "resultCode": "1"
+        }
+        return Response(resp, status=status.HTTP_200_OK)
 
 
-
-
-
+class ClientLocationListView(ListAPIView):
+    queryset = ClientLocation.objects.all()
+    serializer_class = ClientLocationSerializer
+    filter_backends = [OrderingFilter, SearchFilter]
+    pagination_class = GenericPagination
+    ordering_fields = ["zip"]
+    search_fields = ["zip"]
 
 
 

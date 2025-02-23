@@ -173,8 +173,23 @@ class RolePermission(models.Model):
             
 #         except:
 #             pass       
+
+
+class ClientLocation(models.Model):
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE,null=True)
+    zip = models.CharField(max_length=100)
+    client_ratio= models.IntegerField()
+    created_by = models.CharField(max_length=100,null=True)
+    created_at = models.DateTimeField(auto_now_add=True,null=True)
+    updated_by = models.CharField(max_length=100,null=True)
+    updated_at = models.DateTimeField(auto_now_add=True,null=True)
+
     
-     
+
+
+
+
+
     
 class MediaFile(models.Model):
     file = models.FileField(upload_to='media/')

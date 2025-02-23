@@ -416,3 +416,19 @@ class RoleSerializer(serializers.ModelSerializer):
         return instance 
 
 
+
+
+class ClientLocationSerializer(serializers.ModelSerializer):
+    organization_name = serializers.SerializerMethodField()
+    class Meta:
+        model = ClientLocation
+        fields = '__all__'
+    
+    def get_organization_name(self,obj): 
+        organization_name = Organization.objects.filter(id=obj.organization.id).values('organization_name').first()
+        organiz = None
+        if organization_name:
+            organiz = organization_name.get('organization_name')
+        return organiz
+
+

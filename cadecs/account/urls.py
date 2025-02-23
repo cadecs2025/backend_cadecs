@@ -30,7 +30,9 @@ urlpatterns = [
     path('roles-listing/', RoleListView.as_view()),
     path('extract-resume-data/', ExtractResumeDetailsView.as_view()),
     path('extract-org-data/', ExtractOrganizationDetailsView.as_view()),
-    path('extract-client-location-data/', ExtractfacilitylocationView.as_view())   
+    path('extract-client-location-data/', ExtractfacilitylocationView.as_view()),
+    path('client-location/', ClientLocationView.as_view()),
+    path('client-location-pagination/', ClientLocationListView.as_view())       
     
 ]
 

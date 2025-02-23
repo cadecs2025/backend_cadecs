@@ -739,6 +739,20 @@ class ExtractResumeDetailsView(APIView):
         if str(resume).lower().endswith(".pdf"):
             extract_obj = ExtractData()
             extract_data = extract_obj.extract_information(resume)
+
+            email = extract_data.get('email')
+            phone = extract_data.get('phone')
+
+            print(f"email: {email} phone: {phone}")
+
+            if not email and not phone:
+                resp = {
+                'result': "Invalid file. kindly insert resume.",
+                'resultCode': '0',
+                "resultDescription": f"""Invalid file. kindly pass valid pdf file.""",
+                }
+                return Response(resp, status=status.HTTP_200_OK)            
+            
             resp = {
                 'result': extract_data,
                 'resultCode': '1',
@@ -749,10 +763,83 @@ class ExtractResumeDetailsView(APIView):
         else:
             resp = {
                 'result': [],
-                'resultCode': '1',
+                'resultCode': '0',
                 "resultDescription": f"""Invalid file. kindly pass valid pdf file.""",
             }
             return Response(resp, status=status.HTTP_200_OK)
+        
+
+class ExtractOrganizationDetailsView(APIView):
+    def post(self,request):
+        
+        org_file =  request.data.get('org_file',None)
+
+        print(f"organization_file: {org_file}",flush=True)
+        
+        if str(org_file).lower().endswith(".pdf"):
+            extract_obj = ExtractData()
+            extract_data = extract_obj.extract_text_from_pdf(org_file)
+
+            print(f"extract_data: {extract_data}",flush=True)
+
+            lines = extract_data.split("\n")
+
+            org_details = {}
+            org_name = None
+            org_email = None
+            for line in lines:
+                print(f"line: {line}")
+                data_lst=line.split(':')
+                print(data_lst)
+
+                if 'Organiza' in line:
+                    org_details['org_name'] = data_lst[2].lstrip()
+                    org_name = data_lst[2].lstrip()
+                if 'Org Email' in line:
+                    org_details['org_email'] = data_lst[1].lstrip()
+                    org_email = data_lst[1].lstrip()
+                if 'Org contact' in line and not 'Org contact name' in line:
+                    org_details['org_contact'] = data_lst[1].lstrip()
+                if 'Org contact name' in line:
+                    org_details['org_contact_name'] = data_lst[1].lstrip()
+                if 'Website Url'  in line:
+                    org_details['website_url'] = data_lst[3][2:]
+
+            
+
+            if not org_name and not org_email:
+                resp = {
+                'result': "Invalid file. kindly insert valid organization details file.",
+                'resultCode': '0',
+                "resultDescription": f"""Invalid file. kindly pass valid pdf file.""",
+                }
+                return Response(resp, status=status.HTTP_200_OK)            
+            
+            resp = {
+                'result': org_details,
+                'resultCode': '1',
+                "resultDescription": f"""Extract data from organization details file.""",
+            }
+            return Response(resp, status=status.HTTP_200_OK)
+        
+        else:
+            resp = {
+                'result': [],
+                'resultCode': '0',
+                "resultDescription": f"""Invalid file. kindly pass valid pdf file.""",
+            }
+            return Response(resp, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
+
+
 
 
 class MediaFileListView(APIView):

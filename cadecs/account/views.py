@@ -19,6 +19,7 @@ from .CustomJWTSerializers import CustomTokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.core.mail import send_mail
 from .utils.extract_resume import ExtractData
+from django.core.mail import EmailMessage
 
 fieldvalidator = FieldValidator()
 
@@ -313,13 +314,19 @@ class UserProfileView(APIView):
             
             try:
                 usernames = username.title()
-                message= f"""Hello {usernames},\n\n\nYour account has been created. Please find your credentials below:\n\nUsername: {username}\nTemporary Password: {password}\n\nPlease change your password after logging in: https://livedemo.icu/demo/\n\nRegards,\nCadecs"""
+                # message= f"""Hello {usernames},\n\n\nYour account has been created. Please find your credentials below:\n\nUsername: {username}\nTemporary Password: {password}\n\nPlease change your password after logging in: https://livedemo.icu/demo/\n\nRegards,\nCadecs"""
+
+                html_message= f"""<p>Hello {usernames},<br><br><br>Your account has been created. Please find your credentials below:<br><br><b>Username: {username}</b><br><b>Temporary Password: {password}</b><br><br>Please change your password after logging in: https://livedemo.icu/demo/<br><br>Regards,<br>Cadecs</p>"""
 
                 subject = 'Your New Account Credentials'
                 from_email = 'cadecsdevelopment@gmail.com'  
                 recipient_list = [email]  
 
-                send_mail(subject, message, from_email, recipient_list)
+                email = EmailMessage(subject, html_message, from_email, recipient_list)
+                email.content_subtype = "html"  # Ensures the email is sent as HTML
+                email.send()
+
+                # send_mail(subject, html_message, from_email, recipient_list)
             except:
                 pass
             
@@ -991,16 +998,22 @@ class MediaFileListView(APIView):
     """
     def get(self, request, *args, **kwargs):
         subject = 'Cadecs send you username and password'
-        message = f"""Hi Younus How are you"""
+        # html_message = "<p>This is a <b>YOUNUS</b> message.</p>"  # Correct way
+        usernames = 'Younus'
+        password = 123456
+        html_message= f"""<p>Hello {usernames},<br><br><br>Your account has been created. Please find your credentials below:<br><br><b>Username: {usernames}</b><br><b>Temporary Password: {password}</b><br><br>Please change your password after logging in: https://livedemo.icu/demo/<br><br>Regards,<br>Cadecs</p>"""
+
         from_email = 'cadecsdevelopment@gmail.com'  
         recipient_list = ['younus.mohd9097@gmail.com']  
 
-        send_mail(subject, message, from_email, recipient_list)
+        email = EmailMessage(subject, html_message, from_email, recipient_list)
+        email.content_subtype = "html"  # Ensures the email is sent as HTML
+        email.send()
 
         print("mail send successfully",flush=True)
-        media_files = MediaFile.objects.all()
-        serializer = MediaFileSerializer(media_files, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # media_files = MediaFile.objects.all()
+        # serializer = MediaFileSerializer(media_files, many=True)
+        return Response("serializer.data", status=status.HTTP_200_OK)
     
     def post(self, request, *args, **kwargs):
 

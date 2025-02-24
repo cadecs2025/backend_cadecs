@@ -312,8 +312,10 @@ class UserProfileView(APIView):
             # create_user_details(sender=UserProfile, instance=user_ser,created=True, resume=resume,image=image,created_by=created_by,organization=organization)
             
             try:
-                subject = 'Cadecs send you username and password'
-                message = f"""Welcome {username}, your username password given below: \n Username: {username} \n Password: {password}"""
+                usernames = username.title()
+                message= f"""Hello {usernames},\n\n\nYour account has been created. Please find your credentials below:\n\nUsername: {username}\nTemporary Password: {password}\n\nPlease change your password after logging in: https://livedemo.icu/demo/\n\nRegards,\nCadecs"""
+
+                subject = 'Your New Account Credentials'
                 from_email = 'cadecsdevelopment@gmail.com'  
                 recipient_list = [email]  
 
@@ -960,6 +962,23 @@ class ClientLocationListView(ListAPIView):
     pagination_class = GenericPagination
     ordering_fields = ["zip"]
     search_fields = ["zip"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        print(f"self.request: {self.request}",flush=True)
+        print(f"self.request: {self.request.headers}",flush=True)
+        jwt_token = self.request.headers.get('Authorization')
+
+        jwt_response =  decode_jwt(jwt_token)
+        print(f"jwt_response: {jwt_response}",flush=True)
+        organization =  jwt_response.get('organization')         
+
+        if organization == 'cadecs':
+            return queryset
+        else:
+            organization_id = Organization.objects.filter(organization_name=organization,is_deleted=False).first()
+            queryset = queryset.filter(organization=organization_id)  
+            return queryset
 
 
 

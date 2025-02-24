@@ -3,7 +3,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from account.models import Organization, UserProfile,UserDetails
+from account.models import Organization, UserProfile,UserDetails,ClientLocation
 from utils.jwt_decode import decode_jwt
 
 
@@ -24,9 +24,13 @@ class DashboardView(APIView):
                 total_user = total_user.exclude(id=user_id)  
                 user_count=total_user.count()
                 
-                total_org = Organization.objects.filter(is_deleted=False).count()          
+                total_org = Organization.objects.filter(is_deleted=False).count()  
+
+                client_location = ClientLocation.objects.values('zip').distinct()
+                # client_location = total_user.exclude(id=user_id)                      
+                client_location_count=client_location.count()        
                 
-                dict_data = {'total_user':user_count,'total_org': total_org}
+                dict_data = {'total_user':user_count,'total_org': total_org,'total_client_location': client_location_count}
             else:
                 dict_data = {}
         else:
@@ -36,7 +40,11 @@ class DashboardView(APIView):
                 total_user = UserDetails.objects.filter(organization=organization_id)
                 total_user = total_user.exclude(id=user_id)                      
                 user_count=total_user.count()
-                dict_data = {'total_user':user_count}
+
+                client_location = ClientLocation.objects.filter(organization=organization_id).values('zip').distinct()
+                # client_location = total_user.exclude(id=user_id)                      
+                client_location_count=client_location.count()
+                dict_data = {'total_user':user_count, 'total_client_location': client_location_count}
             else:
                 dict_data = {}                
         
